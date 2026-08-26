@@ -150,6 +150,11 @@ h1 .key{color:var(--red-ink)}
     <h2><span class="num">4</span>どなたと？<span class="opt">任意</span></h2>
     <div class="chips" id="withwho"></div>
   </div>
+  <div class="step">
+    <h2><span class="num">5</span><span id="freeLabel"></span><span class="opt" id="freeOpt"></span></h2>
+    <p class="edithint" style="margin:-4px 0 11px">あなたの言葉をひとこと入れると、あなただけの口コミになります。</p>
+    <textarea class="free" id="personalFree" rows="3" maxlength="120" style="margin-top:0"></textarea>
+  </div>
   <button class="go" id="go"><span class="beer">🍺</span>口コミの下書きをつくる</button>
   <div class="result" id="result">
     <div class="cap">あなたの口コミ下書き</div>
@@ -194,10 +199,12 @@ var KAGIYA_CONFIG = /*__CONFIG__*/{
   },
   "defaultReviewLink": "https://g.page/r/CX8y9it229-QEBM/review",
   "stores": [
-    { "key": "nakahara",  "label": "武蔵中原（醸造所併設）", "name": "カギヤブルワリーの武蔵中原店", "full": "カギヤブルワリー 武蔵中原店（CAGHIYA TAP ROOM）", "reviewLink": "https://g.page/r/CX8y9it229-QEBM/review" },
-    { "key": "kosugi",    "label": "武蔵小杉",             "name": "カギヤブルワリーの武蔵小杉店", "full": "カギヤブルワリー 武蔵小杉店", "reviewLink": "https://g.page/r/CVMx3FRLE347EBM/review" },
-    { "key": "jiyugaoka", "label": "自由が丘",             "name": "カギヤブルワリーの自由が丘店", "full": "カギヤブルワリー 自由が丘店", "reviewLink": "https://g.page/r/CcH6ir_HAjOSEBM/review" }
+    { "key": "nakahara",  "label": "武蔵中原（醸造所併設）", "name": "カギヤブルワリーの武蔵中原店", "full": "カギヤブルワリー 武蔵中原店（CAGHIYA TAP ROOM）", "area": "武蔵中原", "city": "川崎", "reviewLink": "https://g.page/r/CX8y9it229-QEBM/review" },
+    { "key": "kosugi",    "label": "武蔵小杉",             "name": "カギヤブルワリーの武蔵小杉店", "full": "カギヤブルワリー 武蔵小杉店", "area": "武蔵小杉", "city": "川崎", "reviewLink": "https://g.page/r/CVMx3FRLE347EBM/review" },
+    { "key": "jiyugaoka", "label": "自由が丘",             "name": "カギヤブルワリーの自由が丘店", "full": "カギヤブルワリー 自由が丘店", "area": "自由が丘", "city": "", "reviewLink": "https://g.page/r/CcH6ir_HAjOSEBM/review" }
   ],
+  "genres": ["クラフトビール", "ビアバー", "クラフトビールバー"],
+  "free": { "label": "ひとこと（自由記入）", "opt": "任意", "placeholder": "印象に残ったこと、お店の人へ、また来たい理由など（あなたの言葉で）" },
   "beers": ["Mellow Yellow IPA", "DOUBLE DECKER IPA", "DREAM HOP", "その日のおすすめ", "ホワイトビール", "ピルスナー"],
   "points": [
     { "key": "beer",    "label": "ビールが美味しい" },
@@ -224,17 +231,18 @@ var KAGIYA_CONFIG = /*__CONFIG__*/{
     "solo":    ["一人でも入りやすかった", "ひとり飲みでも居心地がよかった"],
     "access":  ["駅から近くてふらっと寄れる", "アクセスがよくて行きやすかった"],
     "food":    ["おつまみも美味しかった", "料理とビールの相性がよかった"],
-    "local":   ["川崎で地元のクラフトビールを楽しめるのがうれしい", "地元にこんなお店があるのはありがたい"]
+    "local":   ["地元でこんなお店に出会えてうれしい", "近所にこういうクラフトビール屋があるとうれしい", "ふだん使いできるお店なのがうれしい"]
   },
   "openers": [
     "{w}{store}に行ってきました。",
     "{w}{store}に寄ってみました。",
     "{store}で一杯。",
     "仕事帰りに{w}{store}へ。",
-    "{store}、はじめて行きました。"
+    "{store}、はじめて行きました。",
+    "クラフトビールが飲みたくて、{w}{store}に行ってきました。"
   ],
   "beerlines": ["特に「{b}」がおいしかったです。", "「{b}」が好みでした。", "「{b}」、また飲みたい。", "「{b}」がおすすめです。"],
-  "closers": ["また来ます。", "近くに来たらまた寄りたい。", "川崎でクラフトビールなら、ここ。", "気になる人はぜひ。", "ごちそうさまでした。", "次は違うビールも試したい。"],
+  "closers": ["また来ます。", "近くに来たらまた寄りたい。", "{cityDot}{area}でクラフトビールなら、ここ。", "{cityDot}{area}でおいしいクラフトビールが飲みたいときに。", "{area}で{genre}を探している人におすすめ。", "気になる人はぜひ。", "ごちそうさまでした。", "次は違うビールも試したい。"],
   "note": "<b>お願い</b>　この下書きは、あなたが選んだ「実際のご感想」をもとに組み立てています。投稿はご来店・ご体験いただいた方ご本人の、正直な言葉でお願いします。文章は自由に直していただいてかまいません。いただいた声は、川崎のクラフトビールをもっと面白くしていくカギになります。",
   "sign": { "en": "Well, Let's get <span class=\"r\">drunk</span>.", "jp": "まあ、酔っ払いましょ。 ── カギヤブルワリー" }
 }/*__END__*/;
@@ -254,6 +262,10 @@ document.getElementById("hLede").textContent = CFG.hero.lede;
 document.getElementById("hNote").innerHTML = CFG.note;
 document.getElementById("hSignEn").innerHTML = CFG.sign.en;
 document.getElementById("hSignJp").textContent = CFG.sign.jp;
+var _free = CFG.free || {label:"ひとこと（自由記入）",opt:"任意",placeholder:""};
+document.getElementById("freeLabel").textContent = _free.label;
+document.getElementById("freeOpt").textContent = _free.opt;
+document.getElementById("personalFree").placeholder = _free.placeholder;
 
 /* ---- chips ---- */
 function chip(label, cls){
@@ -322,9 +334,20 @@ var pick=function(a){ return a[Math.floor(Math.random()*a.length)]; };
 function storeObj(){ return state.store ? STORES.filter(function(x){return x.key===state.store;})[0] : null; }
 function storeName(){ var s=storeObj(); return s?s.name:"カギヤブルワリー"; }
 
+/* MEO用プレースホルダ展開（エリア・地名・業種を店舗に合わせて差し込む） */
+function fill(t,w){
+  var s=storeObj();
+  var city=s&&s.city?s.city:"", area=s&&s.area?s.area:"川崎";
+  return t.replace(/\{store\}/g,storeName())
+          .replace(/\{cityDot\}/g, city?city+"・":"")
+          .replace(/\{city\}/g, city)
+          .replace(/\{area\}/g, area)
+          .replace(/\{genre\}/g, pick(CFG.genres||["クラフトビール"]))
+          .replace(/\{w\}/g, w||"");
+}
 function buildReview(){
   var w=""; if(state.withwho){ var ww=WITH.filter(function(x){return x.key===state.withwho;})[0]; if(ww) w=ww.phrase; }
-  var opener=pick(CFG.openers).replace("{store}",storeName()).replace("{w}",w).replace("{w}","");
+  var opener=fill(pick(CFG.openers),w);
   var pts=state.points.slice(); if(pts.length===0) pts=["beer"];
   var lines=pts.map(function(k){ return pick(CFG.phrases[k]||CFG.phrases.beer); });
   var body="";
@@ -335,7 +358,10 @@ function buildReview(){
   var bf=document.getElementById("beerFree").value.trim(); if(bf) beersAll.push(bf);
   var beerLine="";
   if(beersAll.length){ var bname=beersAll.length>1?(beersAll[0]+"や"+beersAll[1]):beersAll[0]; beerLine=pick(CFG.beerlines).replace("{b}",bname); }
-  var parts=[opener,body]; if(beerLine) parts.push(beerLine); parts.push(pick(CFG.closers));
+  /* お客様の自由記入（その人らしさ）＝そのまま1文として挿入 */
+  var personal=document.getElementById("personalFree").value.trim();
+  if(personal && !/[。．.!！?？…♪〜ー]$/.test(personal)) personal+="。";
+  var parts=[opener,body]; if(beerLine) parts.push(beerLine); if(personal) parts.push(personal); parts.push(fill(pick(CFG.closers),w));
   return parts.join("");
 }
 
