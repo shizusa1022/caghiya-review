@@ -134,6 +134,12 @@ details.adv[open] summary::before{content:"▾ "}
     </div>
 
     <div class="sec">
+      <h2><span class="n">★</span>アンケートの保存先（GAS）</h2>
+      <p class="hint">お客様の選択・ひとことを、Googleスプレッドシートに匿名で蓄積できます。GAS（Google Apps Script）のウェブアプリURL（<code>/exec</code>）を貼り付けてください。空欄なら記録しません。設定手順はこの画面の一番下にあります。</p>
+      <label class="fld" style="margin-bottom:0"><span>アンケート保存先URL（GASウェブアプリ /exec）</span><input type="text" id="f_logEndpoint" placeholder="https://script.google.com/macros/s/XXXX/exec"></label>
+    </div>
+
+    <div class="sec">
       <h2><span class="n">3</span>店舗</h2>
       <p class="hint">「表示名」＝ボタンの文字。「文中の呼び方」＝口コミ文に入る店名。「マップ検索名」＝リンク未設定時の検索語。「レビューリンク」を入れると、その店専用の投稿画面へ直行します。</p>
       <div id="stores"></div>
@@ -169,6 +175,55 @@ details.adv[open] summary::before{content:"▾ "}
       <textarea id="f_advanced" class="code" rows="14"></textarea>
       <button class="tbtn" id="btnLoadCfg" style="margin-top:10px">貼り付けた設定JSONを読み込む（全体差し替え）</button>
       <p class="mini">※「設定をコピー」で得たJSON全体を貼り付けて、このボタンで丸ごと読み込めます。</p>
+    </details>
+
+    <div class="divider"></div>
+    <details class="adv" id="gasHelp">
+      <summary>アンケート保存（GAS＋スプレッドシート）の設定手順</summary>
+      <p class="hint" style="margin-top:10px">サーバー不要・無料。お客様の回答が、しずささんのGoogleスプレッドシートに1行ずつ溜まります。</p>
+      <ol style="font-size:12.5px;color:var(--ink-soft);line-height:1.9;padding-left:20px;margin:6px 0 12px">
+        <li>Googleスプレッドシートを新規作成（例：「カギヤ 口コミ回答」）。</li>
+        <li>メニュー <b>拡張機能 → Apps Script</b> を開く。</li>
+        <li>最初のコードを全部消して、下の<b>コードを貼り付け</b>て保存（💾）。</li>
+        <li>右上 <b>デプロイ → 新しいデプロイ</b> → 種類 <b>ウェブアプリ</b>。</li>
+        <li><b>実行するユーザー：自分</b>／<b>アクセスできるユーザー：全員</b> にして <b>デプロイ</b>。初回は承認（自分のGoogleでログイン→許可）。</li>
+        <li>表示される <b>ウェブアプリURL（末尾 /exec）</b> をコピー。</li>
+        <li>上の「<b>アンケート保存先URL</b>」に貼り付け → <b>本番HTMLを保存</b> → サイトに反映（＝GitHubに上げる）。</li>
+      </ol>
+      <p class="mini" style="margin-bottom:6px">Apps Scriptに貼り付けるコード：</p>
+      <pre id="gasCode" style="background:var(--field);border:1px solid var(--line);border-radius:9px;padding:12px;font-family:ui-monospace,Menlo,monospace;font-size:11.5px;line-height:1.5;overflow:auto;white-space:pre;max-height:340px">function doPost(e){
+  var lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try{
+    var data = JSON.parse(e.postData.contents);
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sh = ss.getSheetByName('回答') || ss.insertSheet('回答');
+    if(sh.getLastRow() === 0){
+      sh.appendRow(['日時','店舗','よかった点','ビール','同伴','ひとこと','生成文','流入(QR)','端末']);
+    }
+    sh.appendRow([
+      data.ts ? new Date(data.ts) : new Date(),
+      data.store || '',
+      (data.points || []).join(' / '),
+      (data.beers  || []).join(' / '),
+      data.withwho || '',
+      data.personal|| '',
+      data.draft   || '',
+      data.src     || '',
+      data.device  || ''
+    ]);
+    return ContentService.createTextOutput(JSON.stringify({ok:true}))
+      .setMimeType(ContentService.MimeType.JSON);
+  }catch(err){
+    return ContentService.createTextOutput(JSON.stringify({ok:false, error:String(err)}))
+      .setMimeType(ContentService.MimeType.JSON);
+  }finally{
+    lock.releaseLock();
+  }
+}
+function doGet(){ return ContentService.createTextOutput('OK'); }</pre>
+      <button class="tbtn" id="btnCopyGas" style="margin-top:10px">コードをコピー</button>
+      <p class="mini">※文言や項目を変えたあと再デプロイするときは、同じデプロイの「編集（鉛筆）→バージョン：新規」で更新するとURLは変わりません。</p>
     </details>
 
   </div>
@@ -227,6 +282,7 @@ function populate(cfg){
   el("f_titleB").value=cfg.hero.titleB||"";
   el("f_lede").value=cfg.hero.lede||"";
   el("f_defaultLink").value=cfg.defaultReviewLink||"";
+  el("f_logEndpoint").value=cfg.logEndpoint||"";
   // stores
   var sc=el("stores"); sc.innerHTML="";
   (cfg.stores||[]).forEach(function(s){ sc.appendChild(storeRow(s)); });
@@ -307,6 +363,7 @@ function collect(){
   var cfg={};
   cfg.hero={eyebrow:el("f_eyebrow").value,titleA:el("f_titleA").value,titleKey:el("f_titleKey").value,titleB:el("f_titleB").value,lede:el("f_lede").value};
   cfg.defaultReviewLink=el("f_defaultLink").value.trim();
+  cfg.logEndpoint=el("f_logEndpoint").value.trim();
   cfg.stores=[].map.call(el("stores").children,function(d,i){
     return {key:d.dataset.key||("st"+(i+1)),label:d.querySelector(".s-label").value,name:d.querySelector(".s-name").value,area:d.querySelector(".s-area").value.trim(),city:d.querySelector(".s-city").value.trim(),full:d.querySelector(".s-full").value,reviewLink:d.querySelector(".s-link").value.trim()};
   });
@@ -369,6 +426,9 @@ el("btnLoadCfg").onclick=function(){
   try{ var cfg=JSON.parse(el("f_advanced").value); if(cfg.hero&&cfg.stores){ populate(cfg); render(); toast("設定を読み込みました"); } else { toast("設定JSON全体（heroやstoresを含む）を貼り付けてください"); } }
   catch(e){ toast("JSONを解析できませんでした"); }
 };
+
+var _gas=document.getElementById("btnCopyGas");
+if(_gas) _gas.onclick=function(){ copyText(document.getElementById("gasCode").textContent,"GASコードをコピーしました"); };
 
 boot();
 </script>

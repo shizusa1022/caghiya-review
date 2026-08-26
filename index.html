@@ -198,6 +198,7 @@ var KAGIYA_CONFIG = /*__CONFIG__*/{
     "lede": "今日のカギヤ、どうでしたか？　いくつかタップするだけで、口コミの下書きをつくります。あとはご自身の言葉に直して、投稿するだけ。"
   },
   "defaultReviewLink": "https://g.page/r/CX8y9it229-QEBM/review",
+  "logEndpoint": "",
   "stores": [
     { "key": "nakahara",  "label": "武蔵中原（醸造所併設）", "name": "カギヤブルワリーの武蔵中原店", "full": "カギヤブルワリー 武蔵中原店（CAGHIYA TAP ROOM）", "area": "武蔵中原", "city": "川崎", "reviewLink": "https://g.page/r/CX8y9it229-QEBM/review" },
     { "key": "kosugi",    "label": "武蔵小杉",             "name": "カギヤブルワリーの武蔵小杉店", "full": "カギヤブルワリー 武蔵小杉店", "area": "武蔵小杉", "city": "川崎", "reviewLink": "https://g.page/r/CVMx3FRLE347EBM/review" },
@@ -243,7 +244,7 @@ var KAGIYA_CONFIG = /*__CONFIG__*/{
   ],
   "beerlines": ["特に「{b}」がおいしかったです。", "「{b}」が好みでした。", "「{b}」、また飲みたい。", "「{b}」がおすすめです。"],
   "closers": ["また来ます。", "近くに来たらまた寄りたい。", "{cityDot}{area}でクラフトビールなら、ここ。", "{cityDot}{area}でおいしいクラフトビールが飲みたいときに。", "{area}で{genre}を探している人におすすめ。", "気になる人はぜひ。", "ごちそうさまでした。", "次は違うビールも試したい。"],
-  "note": "<b>お願い</b>　この下書きは、あなたが選んだ「実際のご感想」をもとに組み立てています。投稿はご来店・ご体験いただいた方ご本人の、正直な言葉でお願いします。文章は自由に直していただいてかまいません。いただいた声は、川崎のクラフトビールをもっと面白くしていくカギになります。",
+  "note": "<b>お願い</b>　この下書きは、あなたが選んだ「実際のご感想」をもとに組み立てています。投稿はご来店・ご体験いただいた方ご本人の、正直な言葉でお願いします。文章は自由に直していただいてかまいません。いただいた声は、川崎のクラフトビールをもっと面白くしていくカギになります。<br><span style=\"opacity:.85\">※選択・ご記入いただいた内容は、お店づくりの参考として匿名で記録することがあります（お名前などは取得しません）。</span>",
   "sign": { "en": "Well, Let's get <span class=\"r\">drunk</span>.", "jp": "まあ、酔っ払いましょ。 ── カギヤブルワリー" }
 }/*__END__*/;
 
@@ -374,10 +375,33 @@ function generate(){
 document.getElementById("go").onclick=generate;
 document.getElementById("regen").onclick=function(){ draft.textContent=buildReview(); resetCopy(); };
 
+/* アンケート蓄積：完了時に匿名データをGAS等へ送信（1セッション1回） */
+function logSurvey(){
+  if(state.logged || !CFG.logEndpoint) return;
+  state.logged=true;
+  try{
+    var s=storeObj();
+    var beersAll=state.beers.slice(); var bf=document.getElementById("beerFree").value.trim(); if(bf) beersAll.push(bf);
+    var wl=""; var ww=WITH.filter(function(x){return x.key===state.withwho;})[0]; if(ww) wl=ww.label;
+    var payload={
+      ts:new Date().toISOString(),
+      store: s?s.label:"", storeKey: state.store||"",
+      points: state.points.map(function(k){ var p=POINTS.filter(function(x){return x.key===k;})[0]; return p?p.label:k; }),
+      beers: beersAll,
+      withwho: wl,
+      personal: document.getElementById("personalFree").value.trim(),
+      draft: draft.textContent,
+      src: (new URLSearchParams(location.search).get("store")||""),
+      device: navigator.userAgent
+    };
+    fetch(CFG.logEndpoint,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(payload)});
+  }catch(e){}
+}
+
 function resetCopy(){ var c=document.getElementById("copy"); c.dataset.done="0"; document.getElementById("copyLabel").textContent="コピー"; }
 function doCopy(cb){
   var text=draft.textContent;
-  function ok(){ var c=document.getElementById("copy"); c.dataset.done="1"; document.getElementById("copyLabel").textContent="コピー済み"; toast("コピーしました。Googleに貼り付けてください"); if(cb)cb(); }
+  function ok(){ var c=document.getElementById("copy"); c.dataset.done="1"; document.getElementById("copyLabel").textContent="コピー済み"; toast("コピーしました。Googleに貼り付けてください"); logSurvey(); if(cb)cb(); }
   if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(text).then(ok).catch(function(){ legacyCopy(text,ok); }); }
   else { legacyCopy(text,ok); }
 }
