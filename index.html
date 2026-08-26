@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>カギヤ 口コミのカギ</title>
+<meta name="description" content="カギヤブルワリーのGoogle口コミお手伝いページ。数タップで、あなたの感想を下書きにします。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;900&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap">
+<style>
+/* ===== KAGIYA REVIEW HELPER — tokens ===== */
+:root{
+  --ink:#141210;
+  --canvas:#FBF8F2;
+  --card:#FFFFFF;
+  --red:#D30005;
+  --red-ink:#D30005;
+  --amber:#E29A16;
+  --line:#E7E0D3;
+  --mute:#726B60;
+  --chip:#F3EEE4;
+  --chip-on:#141210;
+  --shadow:0 1px 2px rgba(20,18,16,.05),0 12px 30px rgba(20,18,16,.07);
+  --sans:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic",sans-serif;
+  --disp:"Archivo","Zen Kaku Gothic New",sans-serif;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --ink:#F3EFE7;--canvas:#16130D;--card:#211D15;--red:#FF474B;--red-ink:#FF474B;--amber:#F0B637;
+    --line:#332D22;--mute:#A79F92;--chip:#2B261C;--chip-on:#16130D;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 14px 34px rgba(0,0,0,.5);
+  }
+}
+:root[data-theme="dark"]{
+  --ink:#F3EFE7;--canvas:#16130D;--card:#211D15;--red:#FF474B;--red-ink:#FF474B;--amber:#F0B637;
+  --line:#332D22;--mute:#A79F92;--chip:#2B261C;--chip-on:#16130D;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 14px 34px rgba(0,0,0,.5);
+}
+
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  background:var(--canvas);color:var(--ink);
+  font-family:var(--sans);font-weight:400;line-height:1.72;
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+  padding:22px 16px 40px;display:flex;justify-content:center;
+}
+.wrap{width:100%;max-width:560px}
+.brand{display:flex;align-items:center;gap:10px;margin-bottom:22px}
+.mark{width:34px;height:34px;flex:0 0 34px;border-radius:8px;background:var(--ink);
+  display:grid;place-items:center;color:var(--canvas);font-family:var(--disp);font-weight:900;font-size:18px}
+.brand .name{font-family:var(--disp);font-weight:900;letter-spacing:.02em;font-size:15px}
+.brand .sub{font-size:11.5px;color:var(--mute);letter-spacing:.14em;text-transform:uppercase;font-family:var(--disp);font-weight:700}
+.hero{margin:0 0 26px}
+.eyebrow{display:inline-flex;align-items:center;gap:7px;font-family:var(--disp);font-weight:700;
+  font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--red-ink);margin-bottom:12px}
+.eyebrow::before{content:"";width:22px;height:2px;background:var(--red)}
+h1{font-family:var(--sans);font-weight:900;font-size:clamp(27px,7.4vw,36px);line-height:1.2;
+  letter-spacing:-.01em;margin:0 0 12px;text-wrap:balance}
+h1 .key{color:var(--red-ink)}
+.lede{font-size:14.5px;color:var(--mute);margin:0;max-width:44ch}
+.step{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:17px 16px 18px;margin-bottom:14px;box-shadow:var(--shadow)}
+.step h2{font-size:14px;font-weight:700;margin:0 0 13px;display:flex;align-items:center;gap:10px;letter-spacing:.01em}
+.num{width:22px;height:22px;flex:0 0 22px;border-radius:50%;background:var(--ink);color:var(--canvas);
+  font-family:var(--disp);font-weight:900;font-size:11px;display:grid;place-items:center}
+.opt{font-size:11.5px;color:var(--mute);font-weight:400;margin-left:auto;letter-spacing:.02em}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{appearance:none;border:1px solid var(--line);background:var(--chip);color:var(--ink);
+  font-family:var(--sans);font-size:13.5px;font-weight:500;line-height:1;
+  padding:10px 14px;border-radius:999px;cursor:pointer;transition:transform .06s ease,background .12s ease,border-color .12s ease,color .12s ease}
+.chip:hover{border-color:var(--ink)}
+.chip:active{transform:scale(.96)}
+.chip[aria-pressed="true"]{background:var(--chip-on);color:var(--canvas);border-color:var(--chip-on)}
+.chip.store[aria-pressed="true"]{background:var(--red);border-color:var(--red);color:#fff}
+.chip:focus-visible{outline:2.5px solid var(--red);outline-offset:2px}
+.free{margin-top:11px;width:100%;border:1px solid var(--line);background:var(--canvas);color:var(--ink);
+  font-family:var(--sans);font-size:14px;padding:11px 13px;border-radius:11px}
+.free::placeholder{color:var(--mute)}
+.free:focus{outline:2px solid var(--red);outline-offset:1px;border-color:var(--red)}
+.go{width:100%;margin-top:6px;border:none;cursor:pointer;background:var(--red);color:#fff;
+  font-family:var(--sans);font-weight:700;font-size:16px;letter-spacing:.02em;
+  padding:16px 18px;border-radius:14px;box-shadow:var(--shadow);
+  transition:transform .07s ease,filter .12s ease;display:flex;align-items:center;justify-content:center;gap:9px}
+.go:hover{filter:brightness(1.05)}
+.go:active{transform:scale(.985)}
+.go:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+.go .beer{font-size:18px}
+.result{margin-top:20px;display:none}
+.result.show{display:block;animation:rise .32s cubic-bezier(.2,.7,.2,1)}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.result .cap{font-family:var(--disp);font-weight:700;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--mute);margin-bottom:9px;display:flex;align-items:center;gap:8px}
+.result .cap::before{content:"";width:18px;height:2px;background:var(--red)}
+.draft{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--red);
+  border-radius:14px;padding:17px 17px;font-size:15.5px;line-height:1.9;box-shadow:var(--shadow);
+  white-space:pre-wrap;min-height:96px}
+.draft[contenteditable="true"]:focus{outline:none;border-left-color:var(--amber)}
+.edithint{font-size:11.5px;color:var(--mute);margin:8px 2px 0}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.btn{appearance:none;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer;
+  font-family:var(--sans);font-size:14px;font-weight:700;padding:13px 12px;border-radius:12px;
+  display:flex;align-items:center;justify-content:center;gap:8px;transition:transform .07s ease,border-color .12s}
+.btn:hover{border-color:var(--ink)}
+.btn:active{transform:scale(.97)}
+.btn.copy[data-done="1"]{border-color:var(--ink);background:var(--ink);color:var(--canvas)}
+.btn.post{grid-column:1 / -1;background:var(--ink);color:var(--canvas);border-color:var(--ink);font-size:15px;padding:15px}
+.btn.post:hover{filter:brightness(1.08)}
+.btn svg{width:16px;height:16px;flex:0 0 16px}
+.note{margin-top:24px;padding:15px 15px;border:1px dashed var(--line);border-radius:13px;font-size:12px;color:var(--mute);line-height:1.75}
+.note b{color:var(--ink);font-weight:700}
+.sign{margin-top:22px;text-align:center}
+.sign .well{font-family:var(--disp);font-style:italic;font-weight:700;font-size:14px;color:var(--ink);letter-spacing:.01em}
+.sign .well .r{color:var(--red-ink)}
+.sign .jp{font-size:12px;color:var(--mute);margin-top:2px}
+.toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);
+  background:var(--ink);color:var(--canvas);font-size:13.5px;font-weight:700;
+  padding:12px 20px;border-radius:999px;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:50;box-shadow:var(--shadow)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">
+    <div class="mark">鍵</div>
+    <div>
+      <div class="name">CAGHIYA BREWERY</div>
+      <div class="sub">Kawasaki Craft Beer</div>
+    </div>
+  </div>
+  <div class="hero">
+    <div class="eyebrow" id="hEyebrow"></div>
+    <h1 id="hTitle"></h1>
+    <p class="lede" id="hLede"></p>
+  </div>
+  <div class="step">
+    <h2><span class="num">1</span>どの店で飲みましたか？</h2>
+    <div class="chips" id="stores"></div>
+  </div>
+  <div class="step">
+    <h2><span class="num">2</span>今日飲んだビールは？<span class="opt">任意</span></h2>
+    <div class="chips" id="beers"></div>
+    <input class="free" id="beerFree" type="text" inputmode="text" placeholder="自由入力（例：季節の限定IPA）" maxlength="40">
+  </div>
+  <div class="step">
+    <h2><span class="num">3</span>よかったところは？<span class="opt">いくつでも</span></h2>
+    <div class="chips" id="points"></div>
+  </div>
+  <div class="step">
+    <h2><span class="num">4</span>どなたと？<span class="opt">任意</span></h2>
+    <div class="chips" id="withwho"></div>
+  </div>
+  <button class="go" id="go"><span class="beer">🍺</span>口コミの下書きをつくる</button>
+  <div class="result" id="result">
+    <div class="cap">あなたの口コミ下書き</div>
+    <div class="draft" id="draft" contenteditable="true" spellcheck="false"></div>
+    <p class="edithint">✎ タップして自由に書き直せます。あなたの言葉になっているか、ひと目チェックしてから投稿してください。</p>
+    <div class="actions">
+      <button class="btn copy" id="copy" data-done="0">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+        <span id="copyLabel">コピー</span>
+      </button>
+      <button class="btn" id="regen">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v5h-5"/></svg>
+        別の文にする
+      </button>
+      <button class="btn post" id="post">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20l7-8H5l7 8Z" fill="currentColor" stroke="none"/><circle cx="12" cy="6" r="3"/></svg>
+        コピーして Google に投稿する
+      </button>
+    </div>
+  </div>
+  <div class="note" id="hNote"></div>
+  <div class="sign">
+    <div class="well" id="hSignEn"></div>
+    <div class="jp" id="hSignJp"></div>
+  </div>
+</div>
+<div class="toast" id="toast">コピーしました</div>
+
+<script>
+/* =====================================================================
+   カギヤ 口コミのカギ — 設定（このオブジェクトを管理画面 admin.html が書き換えます）
+   直接編集も可。店舗の reviewLink を入れると、その店専用の投稿画面に飛びます。
+   空の店舗は defaultReviewLink を使います。
+   ===================================================================== */
+var KAGIYA_CONFIG = /*__CONFIG__*/{
+  "hero": {
+    "eyebrow": "Google 口コミ",
+    "titleA": "一杯の感想、",
+    "titleKey": "カギ",
+    "titleB": "にさせてください。",
+    "lede": "今日のカギヤ、どうでしたか？　いくつかタップするだけで、口コミの下書きをつくります。あとはご自身の言葉に直して、投稿するだけ。"
+  },
+  "defaultReviewLink": "https://g.page/r/CX8y9it229-QEBM/review",
+  "stores": [
+    { "key": "nakahara",  "label": "武蔵中原（醸造所併設）", "name": "カギヤブルワリーの武蔵中原店", "full": "カギヤブルワリー 武蔵中原店（CAGHIYA TAP ROOM）", "reviewLink": "https://g.page/r/CX8y9it229-QEBM/review" },
+    { "key": "kosugi",    "label": "武蔵小杉",             "name": "カギヤブルワリーの武蔵小杉店", "full": "カギヤブルワリー 武蔵小杉店", "reviewLink": "https://g.page/r/CVMx3FRLE347EBM/review" },
+    { "key": "jiyugaoka", "label": "自由が丘",             "name": "カギヤブルワリーの自由が丘店", "full": "カギヤブルワリー 自由が丘店", "reviewLink": "https://g.page/r/CcH6ir_HAjOSEBM/review" }
+  ],
+  "beers": ["Mellow Yellow IPA", "DOUBLE DECKER IPA", "DREAM HOP", "その日のおすすめ", "ホワイトビール", "ピルスナー"],
+  "points": [
+    { "key": "beer",    "label": "ビールが美味しい" },
+    { "key": "variety", "label": "種類が豊富" },
+    { "key": "staff",   "label": "スタッフが良い" },
+    { "key": "mood",    "label": "雰囲気がいい" },
+    { "key": "solo",    "label": "一人でも入りやすい" },
+    { "key": "access",  "label": "駅から近い" },
+    { "key": "food",    "label": "料理・おつまみ" },
+    { "key": "local",   "label": "川崎・地元感" }
+  ],
+  "withwho": [
+    { "key": "solo",     "label": "ひとりで",    "phrase": "ひとりで" },
+    { "key": "friend",   "label": "友人と",      "phrase": "友人と" },
+    { "key": "partner",  "label": "パートナーと", "phrase": "パートナーと" },
+    { "key": "family",   "label": "家族と",      "phrase": "家族と" },
+    { "key": "coworker", "label": "同僚と",      "phrase": "仕事仲間と" }
+  ],
+  "phrases": {
+    "beer":    ["ビールがとにかく美味しかった", "クラフトビールが本当においしかった", "どれも味がしっかりしていて好みだった", "ビールのクオリティが高かった"],
+    "variety": ["種類が多くて選ぶのが楽しい", "いろんなスタイルが揃っていた", "常時たくさんの銘柄があって飽きなかった"],
+    "staff":   ["スタッフさんが気さくで話しやすかった", "おすすめを丁寧に教えてくれた", "接客があたたかかった"],
+    "mood":    ["お店の雰囲気がすごく居心地よかった", "肩肘張らずに過ごせる空気感だった", "ゆるくて落ち着ける雰囲気だった"],
+    "solo":    ["一人でも入りやすかった", "ひとり飲みでも居心地がよかった"],
+    "access":  ["駅から近くてふらっと寄れる", "アクセスがよくて行きやすかった"],
+    "food":    ["おつまみも美味しかった", "料理とビールの相性がよかった"],
+    "local":   ["川崎で地元のクラフトビールを楽しめるのがうれしい", "地元にこんなお店があるのはありがたい"]
+  },
+  "openers": [
+    "{w}{store}に行ってきました。",
+    "{w}{store}に寄ってみました。",
+    "{store}で一杯。",
+    "仕事帰りに{w}{store}へ。",
+    "{store}、はじめて行きました。"
+  ],
+  "beerlines": ["特に「{b}」がおいしかったです。", "「{b}」が好みでした。", "「{b}」、また飲みたい。", "「{b}」がおすすめです。"],
+  "closers": ["また来ます。", "近くに来たらまた寄りたい。", "川崎でクラフトビールなら、ここ。", "気になる人はぜひ。", "ごちそうさまでした。", "次は違うビールも試したい。"],
+  "note": "<b>お願い</b>　この下書きは、あなたが選んだ「実際のご感想」をもとに組み立てています。投稿はご来店・ご体験いただいた方ご本人の、正直な言葉でお願いします。文章は自由に直していただいてかまいません。いただいた声は、川崎のクラフトビールをもっと面白くしていくカギになります。",
+  "sign": { "en": "Well, Let's get <span class=\"r\">drunk</span>.", "jp": "まあ、酔っ払いましょ。 ── カギヤブルワリー" }
+}/*__END__*/;
+
+/* プレビュー時のみ localStorage の設定で上書き（?preview=1） */
+try{ if(location.search.indexOf("preview=1")>=0){ var _o=localStorage.getItem("kagiya_kuchikomi_cfg"); if(_o){ KAGIYA_CONFIG=JSON.parse(_o); } } }catch(e){}
+
+var CFG = KAGIYA_CONFIG;
+var STORES = CFG.stores, BEERS = CFG.beers, POINTS = CFG.points, WITH = CFG.withwho;
+var state = { store:null, beers:[], points:[], withwho:null };
+
+/* ---- render hero / static copy from config ---- */
+function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+document.getElementById("hEyebrow").textContent = CFG.hero.eyebrow;
+document.getElementById("hTitle").innerHTML = esc(CFG.hero.titleA)+'<br><span class="key">'+esc(CFG.hero.titleKey)+'</span>'+esc(CFG.hero.titleB);
+document.getElementById("hLede").textContent = CFG.hero.lede;
+document.getElementById("hNote").innerHTML = CFG.note;
+document.getElementById("hSignEn").innerHTML = CFG.sign.en;
+document.getElementById("hSignJp").textContent = CFG.sign.jp;
+
+/* ---- chips ---- */
+function chip(label, cls){
+  var b=document.createElement("button");
+  b.className="chip"+(cls?(" "+cls):""); b.type="button"; b.textContent=label; b.setAttribute("aria-pressed","false");
+  return b;
+}
+(function(){
+  var c=document.getElementById("stores");
+  STORES.forEach(function(s){
+    var b=chip(s.label,"store");
+    b.onclick=function(){
+      state.store=(state.store===s.key)?null:s.key;
+      [].forEach.call(c.children,function(x){x.setAttribute("aria-pressed","false");});
+      if(state.store===s.key) b.setAttribute("aria-pressed","true");
+    };
+    c.appendChild(b);
+  });
+})();
+(function(){
+  var c=document.getElementById("beers");
+  BEERS.forEach(function(name){
+    var b=chip(name);
+    b.onclick=function(){
+      var i=state.beers.indexOf(name);
+      if(i>=0){state.beers.splice(i,1);b.setAttribute("aria-pressed","false");}
+      else{state.beers.push(name);b.setAttribute("aria-pressed","true");}
+    };
+    c.appendChild(b);
+  });
+})();
+(function(){
+  var c=document.getElementById("points");
+  POINTS.forEach(function(p){
+    var b=chip(p.label);
+    b.onclick=function(){
+      var i=state.points.indexOf(p.key);
+      if(i>=0){state.points.splice(i,1);b.setAttribute("aria-pressed","false");}
+      else{state.points.push(p.key);b.setAttribute("aria-pressed","true");}
+    };
+    c.appendChild(b);
+  });
+})();
+(function(){
+  var c=document.getElementById("withwho");
+  WITH.forEach(function(w){
+    var b=chip(w.label);
+    b.onclick=function(){
+      state.withwho=(state.withwho===w.key)?null:w.key;
+      [].forEach.call(c.children,function(x){x.setAttribute("aria-pressed","false");});
+      if(state.withwho===w.key) b.setAttribute("aria-pressed","true");
+    };
+    c.appendChild(b);
+  });
+})();
+
+/* ---- generation ---- */
+var pick=function(a){ return a[Math.floor(Math.random()*a.length)]; };
+function storeObj(){ return state.store ? STORES.filter(function(x){return x.key===state.store;})[0] : null; }
+function storeName(){ var s=storeObj(); return s?s.name:"カギヤブルワリー"; }
+
+function buildReview(){
+  var w=""; if(state.withwho){ var ww=WITH.filter(function(x){return x.key===state.withwho;})[0]; if(ww) w=ww.phrase; }
+  var opener=pick(CFG.openers).replace("{store}",storeName()).replace("{w}",w).replace("{w}","");
+  var pts=state.points.slice(); if(pts.length===0) pts=["beer"];
+  var lines=pts.map(function(k){ return pick(CFG.phrases[k]||CFG.phrases.beer); });
+  var body="";
+  if(lines.length===1){ body=lines[0]+"。"; }
+  else if(lines.length===2){ body=lines[0]+"し、"+lines[1]+"。"; }
+  else { body=lines[0]+"し、"+lines[1]+"。"+lines.slice(2).join("し、")+"。"; }
+  var beersAll=state.beers.slice();
+  var bf=document.getElementById("beerFree").value.trim(); if(bf) beersAll.push(bf);
+  var beerLine="";
+  if(beersAll.length){ var bname=beersAll.length>1?(beersAll[0]+"や"+beersAll[1]):beersAll[0]; beerLine=pick(CFG.beerlines).replace("{b}",bname); }
+  var parts=[opener,body]; if(beerLine) parts.push(beerLine); parts.push(pick(CFG.closers));
+  return parts.join("");
+}
+
+var result=document.getElementById("result"), draft=document.getElementById("draft");
+function generate(){
+  if(!state.store){ toast("まず店舗を選んでください"); document.getElementById("stores").scrollIntoView({behavior:"smooth",block:"center"}); return; }
+  draft.textContent=buildReview(); result.classList.add("show"); resetCopy();
+  result.scrollIntoView({behavior:"smooth",block:"start"});
+}
+document.getElementById("go").onclick=generate;
+document.getElementById("regen").onclick=function(){ draft.textContent=buildReview(); resetCopy(); };
+
+function resetCopy(){ var c=document.getElementById("copy"); c.dataset.done="0"; document.getElementById("copyLabel").textContent="コピー"; }
+function doCopy(cb){
+  var text=draft.textContent;
+  function ok(){ var c=document.getElementById("copy"); c.dataset.done="1"; document.getElementById("copyLabel").textContent="コピー済み"; toast("コピーしました。Googleに貼り付けてください"); if(cb)cb(); }
+  if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(text).then(ok).catch(function(){ legacyCopy(text,ok); }); }
+  else { legacyCopy(text,ok); }
+}
+function legacyCopy(text,ok){
+  var ta=document.createElement("textarea"); ta.value=text; ta.style.position="fixed"; ta.style.top="-9999px";
+  document.body.appendChild(ta); ta.focus(); ta.select();
+  try{ document.execCommand("copy"); ok(); }catch(e){ toast("コピーできませんでした。文章を長押しでコピーしてください"); }
+  document.body.removeChild(ta);
+}
+document.getElementById("copy").onclick=function(){ doCopy(); };
+document.getElementById("post").onclick=function(){
+  doCopy(function(){
+    var s=storeObj();
+    var link=(s&&s.reviewLink)?s.reviewLink:(CFG.defaultReviewLink||"");
+    var url= link ? link : ("https://www.google.com/maps/search/?api=1&query="+encodeURIComponent(s?s.full:"カギヤブルワリー 川崎"));
+    setTimeout(function(){ window.open(url,"_blank","noopener"); },350);
+  });
+};
+
+var toastEl=document.getElementById("toast"), toastT;
+function toast(msg){ toastEl.textContent=msg; toastEl.classList.add("show"); clearTimeout(toastT); toastT=setTimeout(function(){toastEl.classList.remove("show");},2200); }
+</script>
+</body>
+</html>

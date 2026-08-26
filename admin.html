@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>カギヤ 口コミ管理画面</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;900&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap">
+<style>
+:root{
+  --ink:#141210;--canvas:#F4F1EA;--card:#FFFFFF;--red:#D30005;--amber:#E29A16;
+  --line:#E2DCCF;--mute:#726B60;--field:#FBF9F4;--ink-soft:#3C3730;
+  --sans:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic",sans-serif;
+  --disp:"Archivo","Zen Kaku Gothic New",sans-serif;
+  --shadow:0 1px 2px rgba(20,18,16,.05),0 10px 26px rgba(20,18,16,.07);
+}
+@media (prefers-color-scheme:dark){:root{
+  --ink:#F2EEE6;--canvas:#141109;--card:#201C14;--red:#FF474B;--amber:#F0B637;
+  --line:#332D22;--mute:#A79F92;--field:#2A251B;--ink-soft:#D8D2C6;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 12px 30px rgba(0,0,0,.5);
+}}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--canvas);color:var(--ink);font-family:var(--sans);line-height:1.6;-webkit-font-smoothing:antialiased}
+.top{position:sticky;top:0;z-index:20;background:var(--card);border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:12px;padding:11px 18px;flex-wrap:wrap}
+.top .mark{width:30px;height:30px;border-radius:7px;background:var(--ink);color:var(--canvas);
+  display:grid;place-items:center;font-family:var(--disp);font-weight:900;font-size:15px}
+.top h1{font-size:15px;margin:0;font-weight:700}
+.top .tag{font-family:var(--disp);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--mute);font-weight:700}
+.top .sp{flex:1}
+.tbtn{font-family:var(--sans);font-weight:700;font-size:13px;border:1px solid var(--line);background:var(--field);
+  color:var(--ink);border-radius:9px;padding:9px 13px;cursor:pointer;transition:border-color .12s,transform .06s;white-space:nowrap}
+.tbtn:hover{border-color:var(--ink)}
+.tbtn:active{transform:scale(.97)}
+.tbtn.primary{background:var(--red);border-color:var(--red);color:#fff}
+.tbtn.dark{background:var(--ink);border-color:var(--ink);color:var(--canvas)}
+
+.banner{display:none;margin:0;padding:11px 18px;background:#7a1113;color:#fff;font-size:13px;font-weight:500}
+.banner.show{display:block}
+.banner code{background:rgba(255,255,255,.16);padding:2px 6px;border-radius:5px;font-size:12px}
+
+.layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,440px);gap:0;align-items:start}
+@media (max-width:900px){.layout{grid-template-columns:1fr}}
+.panel{padding:20px 18px 60px;max-width:720px}
+.preview-wrap{position:sticky;top:53px;height:calc(100vh - 53px);border-left:1px solid var(--line);
+  background:var(--field);display:flex;flex-direction:column}
+@media (max-width:900px){.preview-wrap{position:static;height:auto;border-left:none;border-top:1px solid var(--line)}}
+.preview-head{font-family:var(--disp);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--mute);
+  font-weight:700;padding:10px 16px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--line)}
+.preview-head .dot{width:7px;height:7px;border-radius:50%;background:var(--red)}
+.frame-holder{flex:1;overflow:auto;display:flex;justify-content:center;padding:16px;background:
+  repeating-linear-gradient(45deg,transparent,transparent 10px,rgba(0,0,0,.015) 10px,rgba(0,0,0,.015) 20px)}
+iframe#preview{width:390px;max-width:100%;height:760px;border:1px solid var(--line);border-radius:14px;background:#fff;box-shadow:var(--shadow)}
+@media (max-width:900px){iframe#preview{height:620px}}
+
+.sec{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 15px;margin-bottom:14px;box-shadow:var(--shadow)}
+.sec > h2{font-size:13.5px;margin:0 0 3px;font-weight:700;display:flex;align-items:center;gap:9px}
+.sec > h2 .n{width:20px;height:20px;flex:0 0 20px;border-radius:6px;background:var(--ink);color:var(--canvas);
+  font-family:var(--disp);font-weight:900;font-size:10px;display:grid;place-items:center}
+.sec .hint{font-size:11.5px;color:var(--mute);margin:0 0 12px}
+.sec .hint a{color:var(--red)}
+label.fld{display:block;margin-bottom:11px}
+label.fld > span{display:block;font-size:11.5px;font-weight:700;color:var(--ink-soft);margin-bottom:4px}
+input[type=text],textarea{width:100%;font-family:var(--sans);font-size:13.5px;color:var(--ink);background:var(--field);
+  border:1px solid var(--line);border-radius:9px;padding:9px 11px}
+input[type=text]:focus,textarea:focus{outline:2px solid var(--red);outline-offset:1px;border-color:var(--red)}
+textarea{resize:vertical;line-height:1.55}
+textarea.code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;min-height:150px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+@media (max-width:520px){.grid2{grid-template-columns:1fr}}
+
+.row{border:1px solid var(--line);border-radius:11px;padding:11px;margin-bottom:10px;background:var(--field);position:relative}
+.row .rm{position:absolute;top:8px;right:8px;border:none;background:transparent;color:var(--mute);cursor:pointer;font-size:17px;line-height:1;padding:4px}
+.row .rm:hover{color:var(--red)}
+.addbtn{font-family:var(--sans);font-weight:700;font-size:12.5px;border:1px dashed var(--line);background:transparent;
+  color:var(--ink-soft);border-radius:9px;padding:9px 12px;cursor:pointer;width:100%}
+.addbtn:hover{border-color:var(--red);color:var(--red)}
+.tags{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:9px}
+.tag-chip{display:inline-flex;align-items:center;gap:6px;background:var(--field);border:1px solid var(--line);
+  border-radius:999px;padding:6px 10px;font-size:12.5px;font-weight:500}
+.tag-chip button{border:none;background:transparent;color:var(--mute);cursor:pointer;font-size:14px;line-height:1;padding:0}
+.tag-chip button:hover{color:var(--red)}
+.addbeer{display:flex;gap:8px}
+.addbeer input{flex:1}
+.mini{font-size:11px;color:var(--mute);margin-top:5px}
+.divider{height:1px;background:var(--line);margin:22px 0 16px}
+details.adv summary{cursor:pointer;font-weight:700;font-size:13px;color:var(--ink-soft);list-style:none}
+details.adv summary::-webkit-details-marker{display:none}
+details.adv summary::before{content:"▸ ";color:var(--red)}
+details.adv[open] summary::before{content:"▾ "}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(16px);background:var(--ink);color:var(--canvas);
+  font-size:13px;font-weight:700;padding:11px 18px;border-radius:999px;opacity:0;pointer-events:none;transition:.2s;z-index:60;box-shadow:var(--shadow)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <div class="mark">鍵</div>
+  <div>
+    <h1>口コミページ 管理画面</h1>
+    <div class="tag">CAGHIYA BREWERY · REVIEW HELPER</div>
+  </div>
+  <div class="sp"></div>
+  <button class="tbtn" id="btnReset">初期設定に戻す</button>
+  <button class="tbtn" id="btnCopyCfg">設定をコピー</button>
+  <button class="tbtn dark" id="btnCopyHtml">本番HTMLをコピー</button>
+  <button class="tbtn primary" id="btnDownload">本番HTMLを保存</button>
+</div>
+
+<div class="banner" id="banner"></div>
+
+<div class="layout">
+  <div class="panel">
+
+    <div class="sec">
+      <h2><span class="n">1</span>見出し・リード文</h2>
+      <p class="hint">お客様に最初に見えるトップの言葉です。</p>
+      <label class="fld"><span>ラベル（小見出し・英字）</span><input type="text" id="f_eyebrow"></label>
+      <div class="grid2">
+        <label class="fld"><span>見出し 前半</span><input type="text" id="f_titleA"></label>
+        <label class="fld"><span>見出し 赤字キーワード</span><input type="text" id="f_titleKey"></label>
+      </div>
+      <label class="fld"><span>見出し 後半</span><input type="text" id="f_titleB"></label>
+      <label class="fld"><span>リード文</span><textarea id="f_lede" rows="3"></textarea></label>
+    </div>
+
+    <div class="sec">
+      <h2><span class="n">2</span>Google レビューリンク（既定）</h2>
+      <p class="hint">「Googleに投稿」で開くリンク。店舗ごとの個別リンクが空のとき、この既定リンクを使います。<br>調べ方：Googleビジネスプロフィール →「レビューを増やす」で出る <code>https://g.page/r/○○/review</code> 形式のリンク。</p>
+      <label class="fld"><span>既定のレビューリンク</span><input type="text" id="f_defaultLink" placeholder="https://g.page/r/XXXX/review"></label>
+    </div>
+
+    <div class="sec">
+      <h2><span class="n">3</span>店舗</h2>
+      <p class="hint">「表示名」＝ボタンの文字。「文中の呼び方」＝口コミ文に入る店名。「マップ検索名」＝リンク未設定時の検索語。「レビューリンク」を入れると、その店専用の投稿画面へ直行します。</p>
+      <div id="stores"></div>
+      <button class="addbtn" id="addStore">＋ 店舗を追加</button>
+    </div>
+
+    <div class="sec">
+      <h2><span class="n">4</span>ビール銘柄</h2>
+      <p class="hint">お客様が選べる銘柄（任意選択）。</p>
+      <div class="tags" id="beers"></div>
+      <div class="addbeer"><input type="text" id="beerInput" placeholder="銘柄名を入力してEnter"><button class="tbtn" id="addBeer">追加</button></div>
+    </div>
+
+    <div class="sec">
+      <h2><span class="n">5</span>よかった点</h2>
+      <p class="hint">お客様が選ぶ「よかったところ」。文章はこの選択に合わせて自動生成されます。</p>
+      <div id="points"></div>
+      <button class="addbtn" id="addPoint">＋ 項目を追加</button>
+      <p class="mini">※新しく追加した項目は、下の「詳細設定」で言い回しを足せます（未設定でも動きます）。</p>
+    </div>
+
+    <div class="sec">
+      <h2><span class="n">6</span>どなたと？</h2>
+      <p class="hint">「表示名」＝ボタン、「文中の言い方」＝口コミ文に入る言葉（例：同僚と→仕事仲間と）。</p>
+      <div id="withs"></div>
+      <button class="addbtn" id="addWith">＋ 追加</button>
+    </div>
+
+    <div class="divider"></div>
+    <details class="adv">
+      <summary>詳細設定（言い回し・注記・サイン）— 上級者向け JSON</summary>
+      <p class="hint" style="margin-top:10px">口コミ文の言い回しプール・書き出し・締め・お願い注記などを直接編集できます。JSON形式。壊れた場合は「初期設定に戻す」で復旧します。</p>
+      <textarea id="f_advanced" class="code" rows="14"></textarea>
+      <button class="tbtn" id="btnLoadCfg" style="margin-top:10px">貼り付けた設定JSONを読み込む（全体差し替え）</button>
+      <p class="mini">※「設定をコピー」で得たJSON全体を貼り付けて、このボタンで丸ごと読み込めます。</p>
+    </details>
+
+  </div>
+
+  <div class="preview-wrap">
+    <div class="preview-head"><span class="dot"></span>ライブプレビュー（お客様の画面）</div>
+    <div class="frame-holder"><iframe id="preview" title="プレビュー"></iframe></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+var TPL=null, MARK_A="/*__CONFIG__*/", MARK_B="/*__END__*/", DEFAULTCFG=null;
+var LSKEY="kagiya_kuchikomi_cfg";
+var beersState=[];
+
+function toast(m){var t=document.getElementById("toast");t.textContent=m;t.classList.add("show");clearTimeout(t._t);t._t=setTimeout(function(){t.classList.remove("show");},2000);}
+function banner(html){var b=document.getElementById("banner");b.innerHTML=html;b.classList.add("show");}
+
+/* ---------- template loading ---------- */
+function extractConfig(tpl){
+  var a=tpl.indexOf(MARK_A), b=tpl.indexOf(MARK_B);
+  if(a<0||b<0) return null;
+  var json=tpl.slice(a+MARK_A.length,b);
+  return JSON.parse(json);
+}
+function injectConfig(tpl,cfg){
+  var a=tpl.indexOf(MARK_A), b=tpl.indexOf(MARK_B);
+  return tpl.slice(0,a)+MARK_A+"\n"+JSON.stringify(cfg,null,2)+"\n"+tpl.slice(b);
+}
+
+function boot(){
+  fetch("index.html",{cache:"no-store"}).then(function(r){
+    if(!r.ok) throw new Error("index.html "+r.status);
+    return r.text();
+  }).then(function(text){
+    TPL=text;
+    DEFAULTCFG=extractConfig(text);
+    if(!DEFAULTCFG) throw new Error("設定マーカーが見つかりません");
+    var saved=null; try{ var s=localStorage.getItem(LSKEY); if(s) saved=JSON.parse(s); }catch(e){}
+    populate(saved||DEFAULTCFG);
+    render();
+  }).catch(function(err){
+    banner("⚠️ index.html を読み込めませんでした（"+err.message+"）。<b>admin.html と index.html を同じフォルダに置き、簡易サーバー経由で開いてください。</b>　例：ターミナルでそのフォルダに入り <code>python3 -m http.server 8000</code> → ブラウザで <code>http://localhost:8000/admin.html</code> を開く。");
+    // still allow editing with a minimal fallback using no template (export disabled)
+  });
+}
+
+/* ---------- populate form from config ---------- */
+function el(id){return document.getElementById(id);}
+function populate(cfg){
+  el("f_eyebrow").value=cfg.hero.eyebrow||"";
+  el("f_titleA").value=cfg.hero.titleA||"";
+  el("f_titleKey").value=cfg.hero.titleKey||"";
+  el("f_titleB").value=cfg.hero.titleB||"";
+  el("f_lede").value=cfg.hero.lede||"";
+  el("f_defaultLink").value=cfg.defaultReviewLink||"";
+  // stores
+  var sc=el("stores"); sc.innerHTML="";
+  (cfg.stores||[]).forEach(function(s){ sc.appendChild(storeRow(s)); });
+  // beers
+  beersState=(cfg.beers||[]).slice(); renderBeers();
+  // points
+  var pc=el("points"); pc.innerHTML="";
+  (cfg.points||[]).forEach(function(p){ pc.appendChild(pointRow(p)); });
+  // withs
+  var wc=el("withs"); wc.innerHTML="";
+  (cfg.withwho||[]).forEach(function(w){ wc.appendChild(withRow(w)); });
+  // advanced
+  el("f_advanced").value=JSON.stringify({
+    phrases:cfg.phrases, openers:cfg.openers, beerlines:cfg.beerlines, closers:cfg.closers, note:cfg.note, sign:cfg.sign
+  },null,2);
+}
+
+function storeRow(s){
+  s=s||{};
+  var d=document.createElement("div"); d.className="row";
+  d.innerHTML='<button class="rm" title="削除">×</button>'+
+    '<div class="grid2">'+
+    '<label class="fld"><span>表示名（ボタン）</span><input type="text" class="s-label"></label>'+
+    '<label class="fld"><span>文中の呼び方</span><input type="text" class="s-name"></label>'+
+    '</div>'+
+    '<label class="fld"><span>マップ検索名（リンク未設定時）</span><input type="text" class="s-full"></label>'+
+    '<label class="fld" style="margin-bottom:0"><span>この店舗のレビューリンク（任意）</span><input type="text" class="s-link" placeholder="空欄なら既定リンクを使用"></label>';
+  d.querySelector(".s-label").value=s.label||"";
+  d.querySelector(".s-name").value=s.name||"";
+  d.querySelector(".s-full").value=s.full||"";
+  d.querySelector(".s-link").value=s.reviewLink||"";
+  d.querySelector(".rm").onclick=function(){ d.remove(); render(); };
+  return d;
+}
+function pointRow(p){
+  p=p||{};
+  var d=document.createElement("div"); d.className="row";
+  d.dataset.key=p.key||("p_"+Math.random().toString(36).slice(2,7));
+  d.innerHTML='<button class="rm" title="削除">×</button>'+
+    '<label class="fld" style="margin-bottom:0;padding-right:26px"><span>項目名</span><input type="text" class="p-label"></label>';
+  d.querySelector(".p-label").value=p.label||"";
+  d.querySelector(".rm").onclick=function(){ d.remove(); render(); };
+  return d;
+}
+function withRow(w){
+  w=w||{};
+  var d=document.createElement("div"); d.className="row";
+  d.innerHTML='<button class="rm" title="削除">×</button>'+
+    '<div class="grid2">'+
+    '<label class="fld" style="margin-bottom:0"><span>表示名（ボタン）</span><input type="text" class="w-label"></label>'+
+    '<label class="fld" style="margin-bottom:0"><span>文中の言い方</span><input type="text" class="w-phrase"></label>'+
+    '</div>';
+  d.querySelector(".w-label").value=w.label||"";
+  d.querySelector(".w-phrase").value=w.phrase||"";
+  d.querySelector(".rm").onclick=function(){ d.remove(); render(); };
+  return d;
+}
+function renderBeers(){
+  var c=el("beers"); c.innerHTML="";
+  beersState.forEach(function(name,i){
+    var s=document.createElement("span"); s.className="tag-chip";
+    s.innerHTML='<span></span><button title="削除">×</button>';
+    s.querySelector("span").textContent=name;
+    s.querySelector("button").onclick=function(){ beersState.splice(i,1); renderBeers(); render(); };
+    c.appendChild(s);
+  });
+}
+
+/* ---------- collect config from form ---------- */
+function collect(){
+  var cfg={};
+  cfg.hero={eyebrow:el("f_eyebrow").value,titleA:el("f_titleA").value,titleKey:el("f_titleKey").value,titleB:el("f_titleB").value,lede:el("f_lede").value};
+  cfg.defaultReviewLink=el("f_defaultLink").value.trim();
+  cfg.stores=[].map.call(el("stores").children,function(d,i){
+    return {key:"st"+(i+1),label:d.querySelector(".s-label").value,name:d.querySelector(".s-name").value,full:d.querySelector(".s-full").value,reviewLink:d.querySelector(".s-link").value.trim()};
+  });
+  cfg.beers=beersState.slice();
+  cfg.points=[].map.call(el("points").children,function(d){
+    return {key:d.dataset.key,label:d.querySelector(".p-label").value};
+  });
+  cfg.withwho=[].map.call(el("withs").children,function(d,i){
+    return {key:"w"+(i+1),label:d.querySelector(".w-label").value,phrase:d.querySelector(".w-phrase").value};
+  });
+  // advanced JSON
+  var adv;
+  try{ adv=JSON.parse(el("f_advanced").value); }
+  catch(e){ adv=DEFAULTCFG?{phrases:DEFAULTCFG.phrases,openers:DEFAULTCFG.openers,beerlines:DEFAULTCFG.beerlines,closers:DEFAULTCFG.closers,note:DEFAULTCFG.note,sign:DEFAULTCFG.sign}:{}; toast("詳細設定のJSONが不正です。前回値を使用中"); }
+  cfg.phrases=adv.phrases; cfg.openers=adv.openers; cfg.beerlines=adv.beerlines; cfg.closers=adv.closers; cfg.note=adv.note; cfg.sign=adv.sign;
+  return cfg;
+}
+
+/* ---------- render preview ---------- */
+var rT;
+function render(){
+  clearTimeout(rT);
+  rT=setTimeout(function(){
+    var cfg=collect();
+    try{ localStorage.setItem(LSKEY,JSON.stringify(cfg)); }catch(e){}
+    if(TPL){ el("preview").srcdoc=injectConfig(TPL,cfg); }
+  },250);
+}
+
+/* auto-render on any input */
+document.addEventListener("input",function(e){ if(e.target.closest(".panel")) render(); });
+
+/* buttons */
+el("addStore").onclick=function(){ el("stores").appendChild(storeRow({})); };
+el("addPoint").onclick=function(){ el("points").appendChild(pointRow({})); };
+el("addWith").onclick=function(){ el("withs").appendChild(withRow({})); };
+function addBeer(){ var v=el("beerInput").value.trim(); if(!v)return; beersState.push(v); el("beerInput").value=""; renderBeers(); render(); }
+el("addBeer").onclick=addBeer;
+el("beerInput").addEventListener("keydown",function(e){ if(e.key==="Enter"){e.preventDefault();addBeer();} });
+
+el("btnReset").onclick=function(){ if(!DEFAULTCFG)return; if(confirm("すべての設定を初期状態に戻します。よろしいですか？")){ populate(DEFAULTCFG); render(); toast("初期設定に戻しました"); } };
+
+function copyText(t,msg){
+  if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(t).then(function(){toast(msg);}).catch(function(){legacy(t,msg);}); }
+  else legacy(t,msg);
+}
+function legacy(t,msg){var ta=document.createElement("textarea");ta.value=t;ta.style.position="fixed";ta.style.top="-9999px";document.body.appendChild(ta);ta.select();try{document.execCommand("copy");toast(msg);}catch(e){toast("コピーできませんでした");}document.body.removeChild(ta);}
+
+el("btnCopyCfg").onclick=function(){ copyText(JSON.stringify(collect(),null,2),"設定JSONをコピーしました"); };
+el("btnCopyHtml").onclick=function(){ if(!TPL){toast("テンプレート未読み込み");return;} copyText(injectConfig(TPL,collect()),"本番HTMLをコピーしました。index.htmlに上書き保存してください"); };
+el("btnDownload").onclick=function(){
+  if(!TPL){toast("テンプレート未読み込み");return;}
+  var html=injectConfig(TPL,collect());
+  var blob=new Blob([html],{type:"text/html;charset=utf-8"});
+  var a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="index.html"; document.body.appendChild(a); a.click();
+  setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},500);
+  toast("index.html を保存しました");
+};
+el("btnLoadCfg").onclick=function(){
+  try{ var cfg=JSON.parse(el("f_advanced").value); if(cfg.hero&&cfg.stores){ populate(cfg); render(); toast("設定を読み込みました"); } else { toast("設定JSON全体（heroやstoresを含む）を貼り付けてください"); } }
+  catch(e){ toast("JSONを解析できませんでした"); }
+};
+
+boot();
+</script>
+</body>
+</html>
