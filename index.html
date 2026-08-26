@@ -263,8 +263,10 @@ function chip(label, cls){
 }
 (function(){
   var c=document.getElementById("stores");
+  var map={};
   STORES.forEach(function(s){
     var b=chip(s.label,"store");
+    map[s.key]=b;
     b.onclick=function(){
       state.store=(state.store===s.key)?null:s.key;
       [].forEach.call(c.children,function(x){x.setAttribute("aria-pressed","false");});
@@ -272,6 +274,11 @@ function chip(label, cls){
     };
     c.appendChild(b);
   });
+  /* QRディープリンク：?store=<key> でその店を最初から選択 */
+  try{
+    var q=new URLSearchParams(location.search).get("store");
+    if(q && map[q]){ state.store=q; map[q].setAttribute("aria-pressed","true"); }
+  }catch(e){}
 })();
 (function(){
   var c=document.getElementById("beers");

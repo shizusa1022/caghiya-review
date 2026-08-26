@@ -247,6 +247,7 @@ function populate(cfg){
 function storeRow(s){
   s=s||{};
   var d=document.createElement("div"); d.className="row";
+  d.dataset.key=s.key||("st_"+Math.random().toString(36).slice(2,7));
   d.innerHTML='<button class="rm" title="削除">×</button>'+
     '<div class="grid2">'+
     '<label class="fld"><span>表示名（ボタン）</span><input type="text" class="s-label"></label>'+
@@ -301,7 +302,7 @@ function collect(){
   cfg.hero={eyebrow:el("f_eyebrow").value,titleA:el("f_titleA").value,titleKey:el("f_titleKey").value,titleB:el("f_titleB").value,lede:el("f_lede").value};
   cfg.defaultReviewLink=el("f_defaultLink").value.trim();
   cfg.stores=[].map.call(el("stores").children,function(d,i){
-    return {key:"st"+(i+1),label:d.querySelector(".s-label").value,name:d.querySelector(".s-name").value,full:d.querySelector(".s-full").value,reviewLink:d.querySelector(".s-link").value.trim()};
+    return {key:d.dataset.key||("st"+(i+1)),label:d.querySelector(".s-label").value,name:d.querySelector(".s-name").value,full:d.querySelector(".s-full").value,reviewLink:d.querySelector(".s-link").value.trim()};
   });
   cfg.beers=beersState.slice();
   cfg.points=[].map.call(el("points").children,function(d){
