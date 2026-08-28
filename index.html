@@ -446,10 +446,11 @@ function buildReview(){
   var bf=document.getElementById("beerFree").value.trim(); if(bf) beersAll.push(bf);
   var beerLine="";
   if(beersAll.length){ var bname=beersAll.length>1?(beersAll[0]+"や"+beersAll[1]):beersAll[0]; beerLine=pick(T.beerlines).replace("{b}",bname); }
-  /* お客様の自由記入（その人らしさ）＝そのまま1文として挿入 */
+  /* お客様の自由記入（その人らしさ）＝いちばん最後に、その人の言葉で締める */
   var personal=document.getElementById("personalFree").value.trim();
   if(personal && !/[。．.!！?？…♪〜ー]$/.test(personal)) personal+="。";
-  var parts=[opener,body]; if(beerLine) parts.push(beerLine); if(personal) parts.push(personal); parts.push(fill(pick(T.closers),w));
+  var parts=[opener,body]; if(beerLine) parts.push(beerLine); parts.push(fill(pick(T.closers),w));
+  if(personal) parts.push(personal);
   return parts.join("");
 }
 
