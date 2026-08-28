@@ -148,9 +148,14 @@ details.adv[open] summary::before{content:"▾ "}
 
     <div class="sec">
       <h2><span class="n">4</span>ビール銘柄</h2>
-      <p class="hint">お客様が選べる銘柄（任意選択）。</p>
-      <div class="tags" id="beers"></div>
-      <div class="addbeer"><input type="text" id="beerInput" placeholder="銘柄名を入力してEnter"><button class="tbtn" id="addBeer">追加</button></div>
+      <p class="hint">お客様の画面に「定番」「準定番」の2グループで表示されます。ここにない銘柄（季節限定など）は、お客様が自由入力欄に書けます。</p>
+      <p style="font-size:12px;font-weight:700;color:var(--ink-soft);margin:14px 0 6px">定番</p>
+      <div class="tags" id="beersRegular"></div>
+      <div class="addbeer"><input type="text" id="beerInputR" placeholder="定番の銘柄名を入力してEnter"><button class="tbtn" id="addBeerR">追加</button></div>
+      <p style="font-size:12px;font-weight:700;color:var(--ink-soft);margin:18px 0 6px">準定番</p>
+      <div class="tags" id="beersSemi"></div>
+      <div class="addbeer"><input type="text" id="beerInputS" placeholder="準定番の銘柄名を入力してEnter"><button class="tbtn" id="addBeerS">追加</button></div>
+      <label class="fld" style="margin-top:16px"><span>自由入力欄のプレースホルダ</span><input type="text" id="f_beerFreePh"></label>
     </div>
 
     <div class="sec">
@@ -239,7 +244,7 @@ function doGet(){ return ContentService.createTextOutput('OK'); }</pre>
 <script>
 var TPL=null, MARK_A="/*__CONFIG__*/", MARK_B="/*__END__*/", DEFAULTCFG=null;
 var LSKEY="kagiya_kuchikomi_cfg";
-var beersState=[];
+var beersR=[], beersS=[];
 
 function toast(m){var t=document.getElementById("toast");t.textContent=m;t.classList.add("show");clearTimeout(t._t);t._t=setTimeout(function(){t.classList.remove("show");},2000);}
 function banner(html){var b=document.getElementById("banner");b.innerHTML=html;b.classList.add("show");}
@@ -287,7 +292,8 @@ function populate(cfg){
   var sc=el("stores"); sc.innerHTML="";
   (cfg.stores||[]).forEach(function(s){ sc.appendChild(storeRow(s)); });
   // beers
-  beersState=(cfg.beers||[]).slice(); renderBeers();
+  beersR=(cfg.beersRegular||cfg.beers||[]).slice(); beersS=(cfg.beersSemi||[]).slice(); renderBeers();
+  el("f_beerFreePh").value=cfg.beerFreePlaceholder||"";
   // points
   var pc=el("points"); pc.innerHTML="";
   (cfg.points||[]).forEach(function(p){ pc.appendChild(pointRow(p)); });
@@ -296,7 +302,7 @@ function populate(cfg){
   (cfg.withwho||[]).forEach(function(w){ wc.appendChild(withRow(w)); });
   // advanced
   el("f_advanced").value=JSON.stringify({
-    phrases:cfg.phrases, openers:cfg.openers, beerlines:cfg.beerlines, closers:cfg.closers, genres:cfg.genres, free:cfg.free, note:cfg.note, sign:cfg.sign
+    phrases:cfg.phrases, openers:cfg.openers, beerlines:cfg.beerlines, closers:cfg.closers, genres:cfg.genres, free:cfg.free, tones:cfg.tones, toneLabel:cfg.toneLabel, note:cfg.note, sign:cfg.sign
   },null,2);
 }
 
@@ -348,13 +354,17 @@ function withRow(w){
   return d;
 }
 function renderBeers(){
-  var c=el("beers"); c.innerHTML="";
-  beersState.forEach(function(name,i){
-    var s=document.createElement("span"); s.className="tag-chip";
-    s.innerHTML='<span></span><button title="削除">×</button>';
-    s.querySelector("span").textContent=name;
-    s.querySelector("button").onclick=function(){ beersState.splice(i,1); renderBeers(); render(); };
-    c.appendChild(s);
+  [["beersRegular",beersR],["beersSemi",beersS]].forEach(function(pair){
+    var c=el(pair[0]); var arr=pair[1];
+    if(!c) return;
+    c.innerHTML="";
+    arr.forEach(function(name,i){
+      var s=document.createElement("span"); s.className="tag-chip";
+      s.innerHTML='<span></span><button title="削除">×</button>';
+      s.querySelector("span").textContent=name;
+      s.querySelector("button").onclick=function(){ arr.splice(i,1); renderBeers(); render(); };
+      c.appendChild(s);
+    });
   });
 }
 
@@ -367,7 +377,9 @@ function collect(){
   cfg.stores=[].map.call(el("stores").children,function(d,i){
     return {key:d.dataset.key||("st"+(i+1)),label:d.querySelector(".s-label").value,name:d.querySelector(".s-name").value,area:d.querySelector(".s-area").value.trim(),city:d.querySelector(".s-city").value.trim(),full:d.querySelector(".s-full").value,reviewLink:d.querySelector(".s-link").value.trim()};
   });
-  cfg.beers=beersState.slice();
+  cfg.beersRegular=beersR.slice();
+  cfg.beersSemi=beersS.slice();
+  cfg.beerFreePlaceholder=el("f_beerFreePh").value;
   cfg.points=[].map.call(el("points").children,function(d){
     return {key:d.dataset.key,label:d.querySelector(".p-label").value};
   });
@@ -377,8 +389,8 @@ function collect(){
   // advanced JSON
   var adv;
   try{ adv=JSON.parse(el("f_advanced").value); }
-  catch(e){ adv=DEFAULTCFG?{phrases:DEFAULTCFG.phrases,openers:DEFAULTCFG.openers,beerlines:DEFAULTCFG.beerlines,closers:DEFAULTCFG.closers,genres:DEFAULTCFG.genres,free:DEFAULTCFG.free,note:DEFAULTCFG.note,sign:DEFAULTCFG.sign}:{}; toast("詳細設定のJSONが不正です。前回値を使用中"); }
-  cfg.phrases=adv.phrases; cfg.openers=adv.openers; cfg.beerlines=adv.beerlines; cfg.closers=adv.closers; cfg.genres=adv.genres; cfg.free=adv.free; cfg.note=adv.note; cfg.sign=adv.sign;
+  catch(e){ adv=DEFAULTCFG?{phrases:DEFAULTCFG.phrases,openers:DEFAULTCFG.openers,beerlines:DEFAULTCFG.beerlines,closers:DEFAULTCFG.closers,genres:DEFAULTCFG.genres,free:DEFAULTCFG.free,tones:DEFAULTCFG.tones,toneLabel:DEFAULTCFG.toneLabel,note:DEFAULTCFG.note,sign:DEFAULTCFG.sign}:{}; toast("詳細設定のJSONが不正です。前回値を使用中"); }
+  cfg.phrases=adv.phrases; cfg.openers=adv.openers; cfg.beerlines=adv.beerlines; cfg.closers=adv.closers; cfg.genres=adv.genres; cfg.free=adv.free; cfg.tones=adv.tones; cfg.toneLabel=adv.toneLabel; cfg.note=adv.note; cfg.sign=adv.sign;
   return cfg;
 }
 
@@ -400,9 +412,11 @@ document.addEventListener("input",function(e){ if(e.target.closest(".panel")) re
 el("addStore").onclick=function(){ el("stores").appendChild(storeRow({})); };
 el("addPoint").onclick=function(){ el("points").appendChild(pointRow({})); };
 el("addWith").onclick=function(){ el("withs").appendChild(withRow({})); };
-function addBeer(){ var v=el("beerInput").value.trim(); if(!v)return; beersState.push(v); el("beerInput").value=""; renderBeers(); render(); }
-el("addBeer").onclick=addBeer;
-el("beerInput").addEventListener("keydown",function(e){ if(e.key==="Enter"){e.preventDefault();addBeer();} });
+function addBeerTo(arr,inputId){ var v=el(inputId).value.trim(); if(!v)return; arr.push(v); el(inputId).value=""; renderBeers(); render(); }
+el("addBeerR").onclick=function(){ addBeerTo(beersR,"beerInputR"); };
+el("addBeerS").onclick=function(){ addBeerTo(beersS,"beerInputS"); };
+el("beerInputR").addEventListener("keydown",function(e){ if(e.key==="Enter"){e.preventDefault();addBeerTo(beersR,"beerInputR");} });
+el("beerInputS").addEventListener("keydown",function(e){ if(e.key==="Enter"){e.preventDefault();addBeerTo(beersS,"beerInputS");} });
 
 el("btnReset").onclick=function(){ if(!DEFAULTCFG)return; if(confirm("すべての設定を初期状態に戻します。よろしいですか？")){ populate(DEFAULTCFG); render(); toast("初期設定に戻しました"); } };
 

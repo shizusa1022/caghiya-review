@@ -74,6 +74,11 @@ h1 .key{color:var(--red-ink)}
 .chip[aria-pressed="true"]{background:var(--chip-on);color:var(--canvas);border-color:var(--chip-on)}
 .chip.store[aria-pressed="true"]{background:var(--red);border-color:var(--red);color:#fff}
 .chip:focus-visible{outline:2.5px solid var(--red);outline-offset:2px}
+.beergroup{font-size:11.5px;font-weight:700;color:var(--mute);letter-spacing:.06em;margin:0 0 7px}
+.beergroup + .chips{margin-bottom:13px}
+.chips + .beergroup{margin-top:2px}
+.chip.tone{padding:11px 15px}
+.chip.tone[aria-pressed="true"]{background:var(--red);border-color:var(--red);color:#fff}
 .free{margin-top:11px;width:100%;border:1px solid var(--line);background:var(--canvas);color:var(--ink);
   font-family:var(--sans);font-size:14px;padding:11px 13px;border-radius:11px}
 .free::placeholder{color:var(--mute)}
@@ -139,8 +144,11 @@ h1 .key{color:var(--red-ink)}
   </div>
   <div class="step">
     <h2><span class="num">2</span>今日飲んだビールは？<span class="opt">任意</span></h2>
-    <div class="chips" id="beers"></div>
-    <input class="free" id="beerFree" type="text" inputmode="text" placeholder="自由入力（例：季節の限定IPA）" maxlength="40">
+    <p class="beergroup">定番</p>
+    <div class="chips" id="beersRegular"></div>
+    <p class="beergroup">準定番</p>
+    <div class="chips" id="beersSemi"></div>
+    <input class="free" id="beerFree" type="text" inputmode="text" placeholder="" maxlength="40">
   </div>
   <div class="step">
     <h2><span class="num">3</span>よかったところは？<span class="opt">いくつでも</span></h2>
@@ -151,7 +159,12 @@ h1 .key{color:var(--red-ink)}
     <div class="chips" id="withwho"></div>
   </div>
   <div class="step">
-    <h2><span class="num">5</span><span id="freeLabel"></span><span class="opt" id="freeOpt"></span></h2>
+    <h2><span class="num">5</span><span id="toneLabel"></span></h2>
+    <div class="chips" id="tones"></div>
+    <p class="edithint" id="toneHint" style="margin:10px 0 0"></p>
+  </div>
+  <div class="step">
+    <h2><span class="num">6</span><span id="freeLabel"></span><span class="opt" id="freeOpt"></span></h2>
     <p class="edithint" style="margin:-4px 0 11px">あなたの言葉をひとこと入れると、あなただけの口コミになります。</p>
     <textarea class="free" id="personalFree" rows="3" maxlength="120" style="margin-top:0"></textarea>
   </div>
@@ -206,7 +219,36 @@ var KAGIYA_CONFIG = /*__CONFIG__*/{
   ],
   "genres": ["クラフトビール", "ビアバー", "クラフトビールバー"],
   "free": { "label": "ひとこと（自由記入）", "opt": "任意", "placeholder": "印象に残ったこと、お店の人へ、また来たい理由など（あなたの言葉で）" },
-  "beers": ["Mellow Yellow IPA", "DOUBLE DECKER IPA", "DREAM HOP", "その日のおすすめ", "ホワイトビール", "ピルスナー"],
+  "beersRegular": ["DAY DREAM", "DOUBLE DECKER", "MELLOW YELLOW", "PILS NO,1"],
+  "beersSemi": ["BRITISH BITTER", "EL-DA-MILE", "Ginger & Honey", "Honey Moon", "JUMPIN JACK FLASH", "Purple Haze", "White Rabbit"],
+  "beerFreePlaceholder": "季節限定・上にないビールは、こちらに入力（例：DREAM HOP）",
+  "tones": [
+    {
+      "key": "report",
+      "label": "お店のレポートを伝えたい",
+      "hint": "行ってきた様子を、そのまま伝える書き方",
+      "openers": ["{w}{store}に行ってきました。", "{w}{store}に寄ってみました。", "{store}で一杯。", "仕事帰りに{w}{store}へ。", "{store}、はじめて行きました。"],
+      "beerlines": ["特に「{b}」がおいしかったです。", "「{b}」が好みでした。", "この日は「{b}」を。", "「{b}」、また飲みたい。"],
+      "closers": ["また来ます。", "近くに来たらまた寄りたい。", "ごちそうさまでした。", "次は違うビールも試したい。", "{cityDot}{area}でおいしいクラフトビールが飲みたいときに。"]
+    },
+    {
+      "key": "recommend",
+      "label": "誰かにおすすめしたい",
+      "hint": "これから行く人に向けて、すすめる書き方",
+      "openers": ["{store}、おすすめです。", "クラフトビールが好きなら、{store}へ。", "{w}行くなら{store}がおすすめ。", "{area}で迷ったら、{store}。"],
+      "beerlines": ["迷ったら「{b}」を。", "「{b}」がおすすめです。", "まずは「{b}」から試してみてください。", "「{b}」はぜひ飲んでみてほしい一杯。"],
+      "closers": ["気になる人はぜひ。", "{area}で{genre}を探している人におすすめ。", "はじめての人にも入りやすいと思います。", "{cityDot}{area}でクラフトビールなら、ここ。", "ぜひ一度行ってみてください。"]
+    },
+    {
+      "key": "message",
+      "label": "お店へのメッセージを送りたい",
+      "hint": "お店の方に向けて、感想やお礼を伝える書き方",
+      "openers": ["{w}{store}にお邪魔しました。", "{store}、いつもありがとうございます。", "{w}{store}で、いい時間を過ごさせてもらいました。"],
+      "beerlines": ["「{b}」、とてもおいしかったです。", "「{b}」が忘れられません。", "「{b}」をいただきました。"],
+      "closers": ["ありがとうございました。またお邪魔します。", "これからも通わせてください。", "お店の皆さん、ありがとうございました。", "また顔を出しますね。"]
+    }
+  ],
+  "toneLabel": "どんな気持ちで書きますか？",
   "points": [
     { "key": "beer",    "label": "ビールが美味しい" },
     { "key": "variety", "label": "種類が豊富" },
@@ -252,8 +294,8 @@ var KAGIYA_CONFIG = /*__CONFIG__*/{
 try{ if(location.search.indexOf("preview=1")>=0){ var _o=localStorage.getItem("kagiya_kuchikomi_cfg"); if(_o){ KAGIYA_CONFIG=JSON.parse(_o); } } }catch(e){}
 
 var CFG = KAGIYA_CONFIG;
-var STORES = CFG.stores, BEERS = CFG.beers, POINTS = CFG.points, WITH = CFG.withwho;
-var state = { store:null, beers:[], points:[], withwho:null };
+var STORES = CFG.stores, POINTS = CFG.points, WITH = CFG.withwho;
+var state = { store:null, beers:[], points:[], withwho:null, tone:null };
 
 /* ---- render hero / static copy from config ---- */
 function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
@@ -294,15 +336,46 @@ function chip(label, cls){
   }catch(e){}
 })();
 (function(){
-  var c=document.getElementById("beers");
-  BEERS.forEach(function(name){
-    var b=chip(name);
+  /* 定番／準定番の2グループ。それ以外は自由入力欄へ */
+  function renderBeerGroup(containerId, list){
+    var c=document.getElementById(containerId);
+    if(!c) return;
+    (list||[]).forEach(function(name){
+      var b=chip(name);
+      b.onclick=function(){
+        var i=state.beers.indexOf(name);
+        if(i>=0){state.beers.splice(i,1);b.setAttribute("aria-pressed","false");}
+        else{state.beers.push(name);b.setAttribute("aria-pressed","true");}
+      };
+      c.appendChild(b);
+    });
+  }
+  renderBeerGroup("beersRegular", CFG.beersRegular || CFG.beers || []);
+  renderBeerGroup("beersSemi", CFG.beersSemi || []);
+  var bf=document.getElementById("beerFree");
+  if(bf && CFG.beerFreePlaceholder) bf.placeholder=CFG.beerFreePlaceholder;
+})();
+
+/* 文章のテイスト選択 */
+(function(){
+  var c=document.getElementById("tones");
+  var hint=document.getElementById("toneHint");
+  var lab=document.getElementById("toneLabel");
+  if(lab) lab.textContent = CFG.toneLabel || "どんな気持ちで書きますか？";
+  if(!c || !CFG.tones) return;
+  CFG.tones.forEach(function(t,idx){
+    var b=chip(t.label,"tone");
     b.onclick=function(){
-      var i=state.beers.indexOf(name);
-      if(i>=0){state.beers.splice(i,1);b.setAttribute("aria-pressed","false");}
-      else{state.beers.push(name);b.setAttribute("aria-pressed","true");}
+      state.tone=t.key;
+      [].forEach.call(c.children,function(x){x.setAttribute("aria-pressed","false");});
+      b.setAttribute("aria-pressed","true");
+      if(hint) hint.textContent = t.hint || "";
     };
     c.appendChild(b);
+    if(idx===0){ /* 既定＝レポート */
+      state.tone=t.key; b.setAttribute("aria-pressed","true");
+      if(hint) hint.textContent = t.hint || "";
+    }
   });
 })();
 (function(){
@@ -346,9 +419,23 @@ function fill(t,w){
           .replace(/\{genre\}/g, pick(CFG.genres||["クラフトビール"]))
           .replace(/\{w\}/g, w||"");
 }
+/* 選択中のテイスト設定を返す（未選択・未定義ならトップレベル設定にフォールバック） */
+function tone(){
+  var t=null;
+  if(CFG.tones && CFG.tones.length){
+    t=CFG.tones.filter(function(x){return x.key===state.tone;})[0] || CFG.tones[0];
+  }
+  return {
+    openers:   (t && t.openers   && t.openers.length)   ? t.openers   : CFG.openers,
+    beerlines: (t && t.beerlines && t.beerlines.length) ? t.beerlines : CFG.beerlines,
+    closers:   (t && t.closers   && t.closers.length)   ? t.closers   : CFG.closers
+  };
+}
+
 function buildReview(){
+  var T=tone();
   var w=""; if(state.withwho){ var ww=WITH.filter(function(x){return x.key===state.withwho;})[0]; if(ww) w=ww.phrase; }
-  var opener=fill(pick(CFG.openers),w);
+  var opener=fill(pick(T.openers),w);
   var pts=state.points.slice(); if(pts.length===0) pts=["beer"];
   var lines=pts.map(function(k){ return pick(CFG.phrases[k]||CFG.phrases.beer); });
   var body="";
@@ -358,11 +445,11 @@ function buildReview(){
   var beersAll=state.beers.slice();
   var bf=document.getElementById("beerFree").value.trim(); if(bf) beersAll.push(bf);
   var beerLine="";
-  if(beersAll.length){ var bname=beersAll.length>1?(beersAll[0]+"や"+beersAll[1]):beersAll[0]; beerLine=pick(CFG.beerlines).replace("{b}",bname); }
+  if(beersAll.length){ var bname=beersAll.length>1?(beersAll[0]+"や"+beersAll[1]):beersAll[0]; beerLine=pick(T.beerlines).replace("{b}",bname); }
   /* お客様の自由記入（その人らしさ）＝そのまま1文として挿入 */
   var personal=document.getElementById("personalFree").value.trim();
   if(personal && !/[。．.!！?？…♪〜ー]$/.test(personal)) personal+="。";
-  var parts=[opener,body]; if(beerLine) parts.push(beerLine); if(personal) parts.push(personal); parts.push(fill(pick(CFG.closers),w));
+  var parts=[opener,body]; if(beerLine) parts.push(beerLine); if(personal) parts.push(personal); parts.push(fill(pick(T.closers),w));
   return parts.join("");
 }
 
@@ -389,6 +476,7 @@ function logSurvey(){
       points: state.points.map(function(k){ var p=POINTS.filter(function(x){return x.key===k;})[0]; return p?p.label:k; }),
       beers: beersAll,
       withwho: wl,
+      tone: (function(){var t=(CFG.tones||[]).filter(function(x){return x.key===state.tone;})[0];return t?t.label:'';})(),
       personal: document.getElementById("personalFree").value.trim(),
       draft: draft.textContent,
       src: (new URLSearchParams(location.search).get("store")||""),
