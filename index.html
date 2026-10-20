@@ -117,6 +117,9 @@ h1 .key{color:var(--red-ink)}
 .sign .well{font-family:var(--disp);font-style:italic;font-weight:700;font-size:14px;color:var(--ink);letter-spacing:.01em}
 .sign .well .r{color:var(--red-ink)}
 .sign .jp{font-size:12px;color:var(--mute);margin-top:2px}
+.opin{border-left:4px solid var(--ink,#1E1612)}
+.opin label{display:block;font-size:13.5px;font-weight:700;margin:12px 0 4px}
+.opin textarea{margin-top:0}
 .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);
   background:var(--ink);color:var(--canvas);font-size:13.5px;font-weight:700;
   padding:12px 20px;border-radius:999px;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:50;box-shadow:var(--shadow)}
@@ -167,6 +170,12 @@ h1 .key{color:var(--red-ink)}
     <h2><span class="num">6</span><span id="freeLabel"></span><span class="opt" id="freeOpt"></span></h2>
     <p class="edithint" style="margin:-4px 0 11px">あなたの言葉をひとこと入れると、あなただけの口コミになります。</p>
     <textarea class="free" id="personalFree" rows="3" maxlength="120" style="margin-top:0"></textarea>
+  </div>
+  <div class="step opin">
+    <h2><span class="num">7</span><span id="opTitle"></span><span class="opt">任意</span></h2>
+    <p class="edithint" id="opLead" style="margin:-4px 0 11px"></p>
+    <div id="opins"></div>
+    <button class="btn" id="opSend" type="button" style="margin-top:4px">意見だけ送る（口コミは書かない）</button>
   </div>
   <button class="go" id="go"><span class="beer">🍺</span>口コミの下書きをつくる</button>
   <div class="result" id="result">
@@ -286,7 +295,17 @@ var KAGIYA_CONFIG = /*__CONFIG__*/{
   ],
   "beerlines": ["特に「{b}」がおいしかったです。", "「{b}」が好みでした。", "「{b}」、また飲みたい。", "「{b}」がおすすめです。"],
   "closers": ["また来ます。", "近くに来たらまた寄りたい。", "{cityDot}{area}でクラフトビールなら、ここ。", "{cityDot}{area}でおいしいクラフトビールが飲みたいときに。", "{area}で{genre}を探している人におすすめ。", "気になる人はぜひ。", "ごちそうさまでした。", "次は違うビールも試したい。"],
-  "note": "<b>お願い</b>　この下書きは、あなたが選んだ「実際のご感想」をもとに組み立てています。投稿はご来店・ご体験いただいた方ご本人の、正直な言葉でお願いします。文章は自由に直していただいてかまいません。いただいた声は、川崎のクラフトビールをもっと面白くしていくカギになります。<br><span style=\"opacity:.85\">※選択・ご記入いただいた内容は、お店づくりの参考として匿名で記録することがあります（お名前などは取得しません）。</span>",
+  "opinions": {
+    "title": "お店への意見（お店にだけ届きます）",
+    "lead": "ここに書いたことは口コミには入りません。お店のスタッフだけが読みます。よくなかったことも、正直に教えてください。",
+    "items": [
+      { "key": "beer",  "label": "ビールについて",                 "placeholder": "味・温度・種類・量など" },
+      { "key": "staff", "label": "接客について",                   "placeholder": "説明・待ち時間・声かけなど" },
+      { "key": "shop",  "label": "お店について（店内・清潔さ・居心地）", "placeholder": "席・音・明るさ・トイレなど" },
+      { "key": "other", "label": "そのほか",                       "placeholder": "料理・値段・あったらうれしいことなど" }
+    ]
+  },
+  "note": "<b>お願い</b>　この下書きは、あなたが選んだ「実際のご感想」をもとに組み立てています。投稿はご来店・ご体験いただいた方ご本人の、正直な言葉でお願いします。文章は自由に直していただいてかまいません。いただいた声は、川崎のクラフトビールをもっと面白くしていくカギになります。<br><span style=\"opacity:.85\">※選択・ご記入いただいた内容は、お店づくりの参考として匿名で記録します（お名前などは取得しません）。「お店への意見」は口コミの下書きには入らず、お店だけが読みます。</span>",
   "sign": { "en": "Well, Let's get <span class=\"r\">drunk</span>.", "jp": "まあ、酔っ払いましょ。 ── カギヤブルワリー" }
 }/*__END__*/;
 
@@ -309,6 +328,22 @@ var _free = CFG.free || {label:"ひとこと（自由記入）",opt:"任意",pla
 document.getElementById("freeLabel").textContent = _free.label;
 document.getElementById("freeOpt").textContent = _free.opt;
 document.getElementById("personalFree").placeholder = _free.placeholder;
+
+/* ---- お店への意見（口コミの下書きには入れない・2026-10-20 しずさ決定「お店にだけ届ける」） ---- */
+var OP = CFG.opinions || {title:"お店への意見（お店にだけ届きます）",lead:"",items:[]};
+document.getElementById("opTitle").textContent = OP.title;
+document.getElementById("opLead").textContent = OP.lead;
+(function(){
+  var c=document.getElementById("opins");
+  (OP.items||[]).forEach(function(o){
+    var l=document.createElement("label"); l.setAttribute("for","op_"+o.key); l.textContent=o.label;
+    var a=document.createElement("textarea"); a.className="free"; a.id="op_"+o.key; a.rows=2; a.maxLength=300; a.placeholder=o.placeholder||"";
+    c.appendChild(l); c.appendChild(a);
+  });
+})();
+function opinions(){
+  var r={}; (OP.items||[]).forEach(function(o){ var v=document.getElementById("op_"+o.key).value.trim(); if(v) r[o.key]=v; }); return r;
+}
 
 /* ---- chips ---- */
 function chip(label, cls){
@@ -459,12 +494,13 @@ function generate(){
   if(!state.store){ toast("まず店舗を選んでください"); document.getElementById("stores").scrollIntoView({behavior:"smooth",block:"center"}); return; }
   draft.textContent=buildReview(); result.classList.add("show"); resetCopy();
   result.scrollIntoView({behavior:"smooth",block:"start"});
+  logSurvey("draft");
 }
 document.getElementById("go").onclick=generate;
 document.getElementById("regen").onclick=function(){ draft.textContent=buildReview(); resetCopy(); };
 
 /* アンケート蓄積：完了時に匿名データをGAS等へ送信（1セッション1回） */
-function logSurvey(){
+function logSurvey(stage){
   if(state.logged || !CFG.logEndpoint) return;
   state.logged=true;
   try{
@@ -479,7 +515,10 @@ function logSurvey(){
       withwho: wl,
       tone: (function(){var t=(CFG.tones||[]).filter(function(x){return x.key===state.tone;})[0];return t?t.label:'';})(),
       personal: document.getElementById("personalFree").value.trim(),
-      draft: draft.textContent,
+      draft: stage==="opinionOnly" ? "" : draft.textContent,
+      kind: "store", event: "",
+      opinions: opinions(),
+      stage: stage||"copy",
       src: (new URLSearchParams(location.search).get("store")||""),
       device: navigator.userAgent
     };
@@ -501,6 +540,13 @@ function legacyCopy(text,ok){
   document.body.removeChild(ta);
 }
 document.getElementById("copy").onclick=function(){ doCopy(); };
+document.getElementById("opSend").onclick=function(){
+  if(!state.store){ toast("まず店舗を選んでください"); document.getElementById("stores").scrollIntoView({behavior:"smooth",block:"center"}); return; }
+  var has=Object.keys(opinions()).length>0;
+  if(!has){ toast("意見の欄に書いてから送ってください"); return; }
+  if(state.logged){ toast("もう受け取っています。ありがとうございました"); return; }
+  logSurvey("opinionOnly"); toast("お店に届けました。ありがとうございました");
+};
 document.getElementById("post").onclick=function(){
   doCopy(function(){
     var s=storeObj();

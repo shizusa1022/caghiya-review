@@ -196,37 +196,61 @@ details.adv[open] summary::before{content:"▾ "}
         <li>上の「<b>アンケート保存先URL</b>」に貼り付け → <b>本番HTMLを保存</b> → サイトに反映（＝GitHubに上げる）。</li>
       </ol>
       <p class="mini" style="margin-bottom:6px">Apps Scriptに貼り付けるコード：</p>
-      <pre id="gasCode" style="background:var(--field);border:1px solid var(--line);border-radius:9px;padding:12px;font-family:ui-monospace,Menlo,monospace;font-size:11.5px;line-height:1.5;overflow:auto;white-space:pre;max-height:340px">function doPost(e){
+      <pre id="gasCode" style="background:var(--field);border:1px solid var(--line);border-radius:9px;padding:12px;font-family:ui-monospace,Menlo,monospace;font-size:11.5px;line-height:1.5;overflow:auto;white-space:pre;max-height:340px">// カギヤ 口コミのカギ — アンケートの保存と読み出し（v2・2026-10-20）
+// v2：お店への意見（4欄）・区分（店舗／醸造部イベント）・段階を足した。見出しの名前で列を合わせるので、前の列の並びのままでも動く。
+// 読み出し（doGet）：スクリプトのプロパティ READ_KEY と同じ key を付けたときだけ、回答をJSONで返す（社員ポータルのダッシュボード用）。
+var COLS = ['日時','区分','店舗・イベント','よかった点','ビール','同伴','テイスト','ひとこと','生成文',
+            '意見_ビール','意見_接客','意見_お店','意見_そのほか','段階','流入(QR)','端末'];
+var OLD = {'店舗':'店舗・イベント'}; // v1の見出しの読み替え
+
+function sheet_(){
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sh = ss.getSheetByName('回答') || ss.insertSheet('回答');
+  if (sh.getLastRow() === 0) { sh.appendRow(COLS); return sh; }
+  var head = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0].map(function(h){ return OLD[h] || h; });
+  sh.getRange(1, 1, 1, head.length).setValues([head]);
+  COLS.forEach(function(c){ if (head.indexOf(c) &lt; 0) { sh.getRange(1, head.length + 1).setValue(c); head.push(c); } });
+  return sh;
+}
+
+function doPost(e){
   var lock = LockService.getScriptLock();
   lock.waitLock(30000);
   try{
-    var data = JSON.parse(e.postData.contents);
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var sh = ss.getSheetByName('回答') || ss.insertSheet('回答');
-    if(sh.getLastRow() === 0){
-      sh.appendRow(['日時','店舗','よかった点','ビール','同伴','ひとこと','生成文','流入(QR)','端末']);
-    }
-    sh.appendRow([
-      data.ts ? new Date(data.ts) : new Date(),
-      data.store || '',
-      (data.points || []).join(' / '),
-      (data.beers  || []).join(' / '),
-      data.withwho || '',
-      data.personal|| '',
-      data.draft   || '',
-      data.src     || '',
-      data.device  || ''
-    ]);
-    return ContentService.createTextOutput(JSON.stringify({ok:true}))
-      .setMimeType(ContentService.MimeType.JSON);
+    var d = JSON.parse(e.postData.contents);
+    var o = d.opinions || {};
+    var sh = sheet_();
+    var head = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0];
+    var v = {
+      '日時': d.ts ? new Date(d.ts) : new Date(),
+      '区分': d.kind === 'brewery' ? '醸造部' : '店舗',
+      '店舗・イベント': d.kind === 'brewery' ? (d.event || 'イベント') : (d.store || ''),
+      'よかった点': (d.points || []).join(' / '),
+      'ビール': (d.beers || []).join(' / '),
+      '同伴': d.withwho || '', 'テイスト': d.tone || '', 'ひとこと': d.personal || '', '生成文': d.draft || '',
+      '意見_ビール': o.beer || '', '意見_接客': o.staff || '', '意見_お店': o.shop || '', '意見_そのほか': o.other || '',
+      '段階': d.stage || '', '流入(QR)': d.src || '', '端末': d.device || ''
+    };
+    sh.appendRow(head.map(function(h){ return v.hasOwnProperty(h) ? v[h] : ''; }));
+    return ContentService.createTextOutput(JSON.stringify({ok:true})).setMimeType(ContentService.MimeType.JSON);
   }catch(err){
-    return ContentService.createTextOutput(JSON.stringify({ok:false, error:String(err)}))
-      .setMimeType(ContentService.MimeType.JSON);
+    return ContentService.createTextOutput(JSON.stringify({ok:false, error:String(err)})).setMimeType(ContentService.MimeType.JSON);
   }finally{
     lock.releaseLock();
   }
 }
-function doGet(){ return ContentService.createTextOutput('OK'); }</pre>
+
+function doGet(e){
+  var key = PropertiesService.getScriptProperties().getProperty('READ_KEY');
+  if (!key || !e || !e.parameter || e.parameter.key !== key) return ContentService.createTextOutput('OK');
+  var sh = sheet_();
+  var vals = sh.getDataRange().getValues();
+  var head = vals.shift();
+  var rows = vals.map(function(r){
+    var x = {}; head.forEach(function(h, i){ if (h !== '端末') x[h] = r[i] instanceof Date ? r[i].toISOString() : r[i]; }); return x;
+  });
+  return ContentService.createTextOutput(JSON.stringify({ok:true, rows:rows})).setMimeType(ContentService.MimeType.JSON);
+}</pre>
       <button class="tbtn" id="btnCopyGas" style="margin-top:10px">コードをコピー</button>
       <p class="mini">※文言や項目を変えたあと再デプロイするときは、同じデプロイの「編集（鉛筆）→バージョン：新規」で更新するとURLは変わりません。</p>
     </details>
@@ -302,7 +326,7 @@ function populate(cfg){
   (cfg.withwho||[]).forEach(function(w){ wc.appendChild(withRow(w)); });
   // advanced
   el("f_advanced").value=JSON.stringify({
-    phrases:cfg.phrases, openers:cfg.openers, beerlines:cfg.beerlines, closers:cfg.closers, genres:cfg.genres, free:cfg.free, tones:cfg.tones, toneLabel:cfg.toneLabel, note:cfg.note, sign:cfg.sign
+    phrases:cfg.phrases, openers:cfg.openers, beerlines:cfg.beerlines, closers:cfg.closers, genres:cfg.genres, free:cfg.free, tones:cfg.tones, toneLabel:cfg.toneLabel, opinions:cfg.opinions, note:cfg.note, sign:cfg.sign
   },null,2);
 }
 
@@ -389,8 +413,8 @@ function collect(){
   // advanced JSON
   var adv;
   try{ adv=JSON.parse(el("f_advanced").value); }
-  catch(e){ adv=DEFAULTCFG?{phrases:DEFAULTCFG.phrases,openers:DEFAULTCFG.openers,beerlines:DEFAULTCFG.beerlines,closers:DEFAULTCFG.closers,genres:DEFAULTCFG.genres,free:DEFAULTCFG.free,tones:DEFAULTCFG.tones,toneLabel:DEFAULTCFG.toneLabel,note:DEFAULTCFG.note,sign:DEFAULTCFG.sign}:{}; toast("詳細設定のJSONが不正です。前回値を使用中"); }
-  cfg.phrases=adv.phrases; cfg.openers=adv.openers; cfg.beerlines=adv.beerlines; cfg.closers=adv.closers; cfg.genres=adv.genres; cfg.free=adv.free; cfg.tones=adv.tones; cfg.toneLabel=adv.toneLabel; cfg.note=adv.note; cfg.sign=adv.sign;
+  catch(e){ adv=DEFAULTCFG?{phrases:DEFAULTCFG.phrases,openers:DEFAULTCFG.openers,beerlines:DEFAULTCFG.beerlines,closers:DEFAULTCFG.closers,genres:DEFAULTCFG.genres,free:DEFAULTCFG.free,tones:DEFAULTCFG.tones,toneLabel:DEFAULTCFG.toneLabel,opinions:DEFAULTCFG.opinions,note:DEFAULTCFG.note,sign:DEFAULTCFG.sign}:{}; toast("詳細設定のJSONが不正です。前回値を使用中"); }
+  cfg.phrases=adv.phrases; cfg.openers=adv.openers; cfg.beerlines=adv.beerlines; cfg.closers=adv.closers; cfg.genres=adv.genres; cfg.free=adv.free; cfg.tones=adv.tones; cfg.toneLabel=adv.toneLabel; cfg.opinions=adv.opinions; cfg.note=adv.note; cfg.sign=adv.sign;
   return cfg;
 }
 
