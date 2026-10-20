@@ -1,8 +1,9 @@
-// カギヤ 口コミのカギ — アンケートの保存と読み出し（v2・2026-10-20）
+// カギヤ 口コミのカギ — アンケートの保存と読み出し（v3・2026-10-20）
+// v3：イベント用アプリの extra.food（食べたもの）と extra.who（すすめたい人）を列に足した（しずさ「出す」）。
 // v2：お店への意見（4欄）・区分（店舗／醸造部イベント）・段階を足した。見出しの名前で列を合わせるので、前の列の並びのままでも動く。
 // 読み出し（doGet）：スクリプトのプロパティ READ_KEY と同じ key を付けたときだけ、回答をJSONで返す（社員ポータルのダッシュボード用）。
 var COLS = ['日時','区分','店舗・イベント','よかった点','ビール','同伴','テイスト','ひとこと','生成文',
-            '意見_ビール','意見_接客','意見_お店','意見_そのほか','段階','流入(QR)','端末'];
+            '意見_ビール','意見_接客','意見_お店','意見_そのほか','食べたもの','すすめたい人','段階','流入(QR)','端末'];
 var OLD = {'店舗':'店舗・イベント'}; // v1の見出しの読み替え
 
 function sheet_(){
@@ -21,6 +22,8 @@ function doPost(e){
   try{
     var d = JSON.parse(e.postData.contents);
     var o = d.opinions || {};
+    var x = d.extra || {};
+    var list = function(v){ return Array.isArray(v) ? v.join(' / ') : (v || ''); };
     var sh = sheet_();
     var head = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0];
     var v = {
@@ -31,6 +34,7 @@ function doPost(e){
       'ビール': (d.beers || []).join(' / '),
       '同伴': d.withwho || '', 'テイスト': d.tone || '', 'ひとこと': d.personal || '', '生成文': d.draft || '',
       '意見_ビール': o.beer || '', '意見_接客': o.staff || '', '意見_お店': o.shop || '', '意見_そのほか': o.other || '',
+      '食べたもの': list(x.food), 'すすめたい人': list(x.who),
       '段階': d.stage || '', '流入(QR)': d.src || '', '端末': d.device || ''
     };
     sh.appendRow(head.map(function(h){ return v.hasOwnProperty(h) ? v[h] : ''; }));
